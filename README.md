@@ -6,6 +6,7 @@ The CUTENESS R package allows to analyse toxicogenomics gene expression dataset 
 ```R
 library(devtools)
 install_github("angy89/CUTENESS")
+```
 
 # Example of R Usage
 ```R
