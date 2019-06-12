@@ -6,7 +6,7 @@ Author: Angela Serra
 Maintainer: Angela Serra <angela.serra@tuni.fi>
 Authors@R: c(person("Angela", "Serra", role = c("aut", "cre"), email = "angela.serra@tuni.fi"),
              person("Dario","Greco",role = c("aut")))
-Description: The TinderMIX package allows to analyse toxicogenomics gene expression dataset with multiple dose levels and time-points. It allows to identify the expression patterns with respect to both variables and to cluster genes accordingly. It also identify enriched pathways/go terms that are associated to each cluster.
+Description: The TinderMIX package allows to analyse toxicogenomics data with multiple dose levels and time-points. It allows to identify the expression patterns with respect to both variables and to cluster molecular features accordingly. It also identify enriched pathways/go terms that are associated to each cluster.
 Depends:
     R (>= 3.4), 
     stats,
