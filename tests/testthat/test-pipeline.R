@@ -34,6 +34,17 @@ test_that("pipeline works", {
   print("Step 6: print clustering prototype")
   plot_clusters_prototypes(clpr$meanXYZ, nR = 2)
 
+  GL = ItemsList[c("Dose","Time","Dose:Time:DoseTime","Dose:Time")]
+  classes = rep("D", length(responsive_genes))
+  names(classes) = responsive_genes
+  classes[names(classes) %in% GL$Time] = "T"
+  classes[names(classes) %in% GL$`Dose:Time`] = "DT"
+  classes[names(classes) %in% GL$`Dose:Time:DoseTime`] = "DTDT"
+  
+  #clpr$optcl
+  res = fisher_test(classes = classes,clustering = hls_res$hls_res[[5]]$clusters,matrixRownames = names(classes) ,nCluster = 10)
+  res$BFT
+  
   enrRes = compute_enrichment(clpr$optcl,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
   write_xlsx_for_funmappone(clpr$optcl,filePath = "../contour_clustering/gene_clustering.xlsx")
 
