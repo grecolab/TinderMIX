@@ -1,7 +1,7 @@
 context("test-pipeline")
 
 test_that("pipeline works", {
-  library(CUTENESS)
+  library(TinderMIX)
 
   data("WY14643")
   exp_data = WY14643$exp_data
