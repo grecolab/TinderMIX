@@ -32,9 +32,9 @@ a list with the enriched pathways for each cluster of genes
 This function perform enchment of the genes in each cluster
 }
 \examples{
-  data("WY14643")
-  exp_data = WY14643$exp_data
-  pheno_data = WY14643$pheno_data
+data("FC_WY14643")
+exp_data = fc_data
+pheno_data = pdata
   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
   ItemsList = build_items_list(PvalMat)
   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))

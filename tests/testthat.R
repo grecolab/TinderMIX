@@ -1,4 +1,4 @@
 library(testthat)
-library(CUTENESS)
+library(TinderMIX)
 
-test_check("CUTENESS")
+test_check("TinderMIX")

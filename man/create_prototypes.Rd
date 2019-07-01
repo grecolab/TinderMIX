@@ -22,9 +22,9 @@ a list with the contour objects for each clustering prototype and the vector of 
 this function create the cluster prototypes as the mean values of the z maps of all the genes in the cluster
 }
 \examples{
-  data("WY14643")
-  exp_data = WY14643$exp_data
-  pheno_data = WY14643$pheno_data
+data("FC_WY14643")
+exp_data = fc_data
+pheno_data = pdata
   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
   ItemsList = build_items_list(PvalMat)
   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))

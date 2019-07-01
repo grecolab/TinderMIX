@@ -26,9 +26,9 @@ a list with the clustering results and statistics for the optimal number of clus
 It clusters the contour plots by also estimating the ideal number of clusters
 }
 \examples{
-  data("WY14643")
-  exp_data = WY14643$exp_data
-  pheno_data = WY14643$pheno_data
+data("FC_WY14643")
+exp_data = fc_data
+pheno_data = pdata
   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
   ItemsList = build_items_list(PvalMat)
   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))

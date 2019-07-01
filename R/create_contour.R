@@ -17,9 +17,9 @@
 #' \item{DFList}{a list with the data used for the fitting}
 #'
 #' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
+#'   data("FC_WY14643")
+#'   exp_data = fc_data
+#'   pheno_data = pdata
 #'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #'   ItemsList = build_items_list(PvalMat)
 #'   responsive_genes = unique(c(unlist(ItemsList$Dose), unlist(ItemsList$Time), unlist(ItemsList$`Dose:Time:DoseTime`), unlist(ItemsList$`Dose:Time`)))
@@ -28,8 +28,11 @@
 #' @export
 #'
 
-create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50){
-  GenesMap = c()
+#modelType string showing the model to fit. Possible options: poly2 and loess 
+
+create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50){ #modelType = "poly2
+  GenesMap = matrix(NA, ncol = length(responsive_genes), nrow = (gridSize*gridSize) )
+  colnames(GenesMap) = responsive_genes
   RPGenes = list()
   DFList = list()
 
@@ -40,6 +43,8 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
   pb = txtProgressBar(min = 1, max = length(responsive_genes), style = 3)
   for(g in responsive_genes){
     Exp = reshape::melt(exp_data[g,])
+    Exp = cbind(rownames(Exp), Exp)
+    colnames(Exp)[1] = "variable"
     Exp = cbind(Exp, pheno_data[as.character(Exp$variable),dose_index])
     Exp = cbind(Exp, pheno_data[as.character(Exp$variable),time_point_index])
     colnames(Exp) = c("Sample","Exp","Dose","Time")
@@ -47,8 +52,14 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
     Exp = as.data.frame(Exp)
     Exp$Dose = as.numeric(as.vector(Exp$Dose))
     Exp$Time = as.numeric(as.vector(Exp$Time))
-
     model <- stats::lm(Exp ~ Dose * Time + I(Dose^2) + I(Time^2),data = Exp)
+    
+    # if(modelType == "poly2"){
+    #   model <- stats::lm(Exp ~ Dose * Time + I(Dose^2) + I(Time^2),data = Exp)
+    # }
+    # if(modelType == "loess"){
+    #   model = loess(Exp ~ Dose + Time,data = Exp)
+    # }
 
     f <- summary(model)$fstatistic
     p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
@@ -64,7 +75,8 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
     y <- seq(y[1], y[2], length.out=gridSize)
     z <- outer(x,y, function(Dose,Time) stats::predict(model, data.frame(Dose,Time)))
 
-    GenesMap = cbind(GenesMap,as.vector(z)) # I want to compute the distance by the genes based on the mapping z
+    #GenesMap = cbind(GenesMap,as.vector(z)) # I want to compute the distance by the genes based on the mapping z
+    GenesMap[,g] =  as.vector(z)
     RPGenes[[g]] = list(x,y,z)
     DFList[[g]] = Exp
 

@@ -19,9 +19,9 @@
 #' @return a list with the enriched pathways for each cluster of genes
 #'
 #' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
 #'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #'   ItemsList = build_items_list(PvalMat)
 #'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
@@ -148,7 +148,6 @@ convert_genes = function(organism = "hsapiens", GList, annType = "SYMBOL"){
       selectAnnDF = selectAnnDF[-toRem,]
     }
 
-
     #remove eventual duplicates
     selectAnnDF = selectAnnDF[!duplicated(selectAnnDF$SYMBOL),]
 
@@ -165,7 +164,6 @@ convert_genes = function(organism = "hsapiens", GList, annType = "SYMBOL"){
     #update gene symbols
     GList[[i]] = M
 
-
   }
 
   return(GList)
@@ -177,21 +175,7 @@ convert_genes = function(organism = "hsapiens", GList, annType = "SYMBOL"){
 #' @param optimal_clustering is a numeric vector with the clustering result for every gene
 #' @param filePath is a string specifying the path of the xlsx file
 #'
-#' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
-#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'   ItemsList = build_items_list(PvalMat)
-#'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
-#'   enrRes = compute_enrichment(clpr$optcl,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
-#'   write_xlsx_for_funmappone(clpr$optcl,filePath = "../contour_clustering/gene_clustering.xlsx")
-#'
 #' @export
-
-
 
 write_xlsx_for_funmappone = function(optimal_clustering,filePath = "../contour_clustering/gene_clustering.xlsx"){
   genes1 = names(optimal_clustering)[optimal_clustering == 1]

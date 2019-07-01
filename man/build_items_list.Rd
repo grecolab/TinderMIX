@@ -18,9 +18,9 @@ a list containing the genes in each position of the venn diagram
 This function computes the venn diagram of the genes associated to time, dose or their interaction
 }
 \examples{
-data("WY14643")
-exp_data = WY14643$exp_data
-pheno_data = WY14643$pheno_data
+data("FC_WY14643")
+exp_data = fc_data
+pheno_data = pdata
 PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 ItemsList = build_items_list(PvalMat)
 

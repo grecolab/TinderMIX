@@ -11,9 +11,9 @@
 #' @return a matrix with pvalue associated to the dose, timepoint and the dose*timepoint effect
 #'
 #' @examples
-#' data("WY14643")
-#' exp_data = WY14643$exp_data
-#' pheno_data = WY14643$pheno_data
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
 #' PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #'
 #' @export
@@ -26,6 +26,8 @@ compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point
   pb = txtProgressBar(min=1, max = nrow(exp_data), style = 3)
   for(i in 1:nrow(exp_data)){
     Exp = reshape::melt(exp_data[i,])
+    Exp = cbind(rownames(Exp),Exp)
+    colnames(Exp)[1] = "variable"
     Exp = cbind(Exp, pheno_data[as.character(Exp$variable),dose_index])
     Exp = cbind(Exp, pheno_data[as.character(Exp$variable),time_point_index])
     colnames(Exp) = c("Sample","Exp","Dose","Time")
@@ -57,9 +59,9 @@ compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point
 #' @return a list containing the genes in each position of the venn diagram
 #'
 #' @examples
-#' data("WY14643")
-#' exp_data = WY14643$exp_data
-#' pheno_data = WY14643$pheno_data
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
 #' PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #' ItemsList = build_items_list(PvalMat)
 #'

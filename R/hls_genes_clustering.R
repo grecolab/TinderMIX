@@ -12,9 +12,9 @@
 #' \item{clusterList}{a list with the clustering vectors}
 #'
 #' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
 #'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #'   ItemsList = build_items_list(PvalMat)
 #'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
@@ -131,9 +131,9 @@ findCenter <- function(DB,clust_vector){
 #' \item{optcl}{a vector with the optimal clustering}
 #'
 #' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
 #'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #'   ItemsList = build_items_list(PvalMat)
 #'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
@@ -181,19 +181,20 @@ create_prototypes = function(clust_res,summaryMat,contour_res ){
 #'
 #' @param meanXYZ a list the contour object for each prototype computed with the function create_prototypes
 #' @param nR the number of rows to use in the plot
-#'
+#' @param contour_size number specifying the distance between each contour line
+#' 
 #' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
 #'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
 #'   ItemsList = build_items_list(PvalMat)
 #'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),
 #'                               unlist(ItemsList$`Dose:Time:DoseTime`),
 #'                               unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,\cr
+#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,
 #'                               dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25),\cr
+#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25),
 #'                                  method="pearson", hls.method = "ward")
 #'
 #'   clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
@@ -202,10 +203,34 @@ create_prototypes = function(clust_res,summaryMat,contour_res ){
 #' @export
 #'
 
-plot_clusters_prototypes = function(meanXYZ, nR = 2){
+plot_clusters_prototypes = function(meanXYZ, nR = 2, contour_size=0.05){
+  
+  min_th = 100
+  max_th = -100
+  
+  for(i in 1:length(meanXYZ)){
+    mi = min(meanXYZ[[i]][[3]])
+    mix = max(meanXYZ[[i]][[3]])
+    if(mi<min_th){
+      min_th = mi
+    }
+    if(mix>max_th){
+      max_th = mix
+    }
+  }
+  
   PL = list()
   for(i in 1:length(meanXYZ)){
-    PL[[i]] <- plotly::plot_ly(x = meanXYZ[[i]][[1]], y = meanXYZ[[i]][[2]], z = t(meanXYZ[[i]][[3]]), type = "contour")
+    PL[[i]] <- plotly::plot_ly(x = meanXYZ[[i]][[1]], 
+                               y = meanXYZ[[i]][[2]], 
+                               z = t(meanXYZ[[i]][[3]]), 
+                               type = "contour", 
+                               autocontour = F,
+                               contours = list(
+                                 start = min_th,
+                                 end = max_th,
+                                 size = contour_size
+                               )) 
   }
   p = plotly::subplot(PL,nrows = nR)
   print(p)

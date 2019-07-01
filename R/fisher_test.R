@@ -8,7 +8,6 @@
 #' @export
 #' 
 fisher_test <- function(classes, clustering, matrixRownames, nCluster){
-  
   gene_clust <- clustering
   nClass <- length(table(classes))
   
