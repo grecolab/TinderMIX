@@ -16,21 +16,3 @@ plot_clusters_prototypes(meanXYZ, nR = 2, contour_size = 0.05)
 \description{
 this function plots the clusters prototype
 }
-\examples{
-data("FC_WY14643")
-exp_data = fc_data
-pheno_data = pdata
-  PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-  ItemsList = build_items_list(PvalMat)
-  responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),
-                              unlist(ItemsList$`Dose:Time:DoseTime`),
-                              unlist(ItemsList$`Dose:Time`)))
-  contour_res = create_contour(exp_data, pheno_data, responsive_genes,
-                              dose_index = 2,time_point_index =3 ,gridSize = 50)
-  hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25),
-                                 method="pearson", hls.method = "ward")
-
-  clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
-  plot_clusters_prototypes(clpr$meanXYZ, nR = 2)
-
-}

@@ -21,7 +21,8 @@ Depends:
     org.Hs.eg.db, 
     org.Mm.eg.db, 
     org.Rn.eg.db,
-    xlsx
+    xlsx,
+    pracma
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

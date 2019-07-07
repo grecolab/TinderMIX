@@ -11,16 +11,6 @@
 #' \item{summaryMat}{a matrix with summary statistic for each k value given in input}
 #' \item{clusterList}{a list with the clustering vectors}
 #'
-#' @examples
-#' data("FC_WY14643")
-#' exp_data = fc_data
-#' pheno_data = pdata
-#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'   ItemsList = build_items_list(PvalMat)
-#'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
-#'
 #' @export
 #'
 
@@ -130,16 +120,6 @@ findCenter <- function(DB,clust_vector){
 #' \item{meanXYZ}{a list the contour object for each prototype}
 #' \item{optcl}{a vector with the optimal clustering}
 #'
-#' @examples
-#' data("FC_WY14643")
-#' exp_data = fc_data
-#' pheno_data = pdata
-#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'   ItemsList = build_items_list(PvalMat)
-#'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
-#'   clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
 #'
 #' @export
 #'
@@ -183,22 +163,6 @@ create_prototypes = function(clust_res,summaryMat,contour_res ){
 #' @param nR the number of rows to use in the plot
 #' @param contour_size number specifying the distance between each contour line
 #' 
-#' @examples
-#' data("FC_WY14643")
-#' exp_data = fc_data
-#' pheno_data = pdata
-#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'   ItemsList = build_items_list(PvalMat)
-#'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),
-#'                               unlist(ItemsList$`Dose:Time:DoseTime`),
-#'                               unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,
-#'                               dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25),
-#'                                  method="pearson", hls.method = "ward")
-#'
-#'   clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
-#'   plot_clusters_prototypes(clpr$meanXYZ, nR = 2)
 #'
 #' @export
 #'

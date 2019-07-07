@@ -16,15 +16,6 @@
 #' \item{Statis}{a matrix witht the fitting statistics: PValue,Adj.R.Square,RMSE}
 #' \item{DFList}{a list with the data used for the fitting}
 #'
-#' @examples
-#'   data("FC_WY14643")
-#'   exp_data = fc_data
-#'   pheno_data = pdata
-#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'   ItemsList = build_items_list(PvalMat)
-#'   responsive_genes = unique(c(unlist(ItemsList$Dose), unlist(ItemsList$Time), unlist(ItemsList$`Dose:Time:DoseTime`), unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'
 #' @export
 #'
 
@@ -95,16 +86,6 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
 #' @param toPlot is a list containing the predicted value for the x, y and z axis
 #' @param DF is the data frame containing the information for the samples used in the fitting process
 #' @return a plotly object
-#'
-#' @examples
-#'   data("WY14643")
-#'   exp_data = WY14643$exp_data
-#'   pheno_data = WY14643$pheno_data
-#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'   ItemsList = build_items_list(PvalMat)
-#'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-#'   plot3d(toPlot = contour_res$RPGenes[["Pdk4"]],DF = contour_res$DFList[["Pdk4"]])
 #'
 #' @export
 #'

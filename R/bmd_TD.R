@@ -1,25 +1,98 @@
+
+label2DMap = function(map, verso){
+  # which(map == min(map),arr.ind = T)
+  # which(map == max(map),arr.ind = T)
+  
+  ranges = cut(seq(5, 20, length.out=50),3)
+  
+  low = which(ranges==levels(ranges)[1])
+  middle = which(ranges==levels(ranges)[2])
+  high = which(ranges==levels(ranges)[3])
+  ids = list(low,middle,high)
+  
+  #ttt is a 3x3 matrix, with low-mid-high on the column and high-mid-low on the rows.
+  ttt = matrix(0, 3,3)
+  rownames(ttt) = c("High","Mid","Low")
+  colnames(ttt) = c("Low","Mid","High")
+  for(i in 3:1){
+    for(j in 1:3){
+      ttt[i,j] = mean(mean(map[ids[[i]],ids[[j]]]))
+    }
+  }
+  
+  qq = quantile(ttt)
+  print(qq)
+  if(abs(qq[5]) >= abs(qq[1])){
+    ttt_lab = ttt>=qq[4]
+  }else{
+    ttt_lab= ttt<=qq[2]
+  }
+  
+  ttt = ttt*verso
+  
+  return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
+  
+}
+
+bwtraceboundary= function(ternaryIMBMD){
+  diffMat = 0 * ternaryIMBMD
+  for(i in 1:nrow(ternaryIMBMD)){
+    idx = which(ternaryIMBMD[i,]==1)
+    diffMat[i, idx[1]] = 1
+    diffMat[i, idx[length(idx)]] = 1
+  }
+  
+  for(i in 1:ncol(ternaryIMBMD)){
+    idx = which(ternaryIMBMD[,i]==1)
+    diffMat[idx[1],i] = 1
+    diffMat[idx[length(idx)],i] = 1
+  }
+  
+  #image(diffMat)
+  
+  image_border = which(diffMat==1,arr.ind = 1)
+  return(list(diffMat=diffMat,image_border=image_border))
+}
+
+optimal_fitting_by_r2 = function(doses, times){
+  n = 1:4
+  modelList = list()
+  adjustedR2List = c()
+  for(i in n){
+    model=lm( bquote( times ~ poly(doses,.(i)) ), data=data.frame(doses=doses, times = times)) 
+    
+    # model <- lm(times ~ poly(doses,i))
+    sm = summary(model)
+    modelList[[i]] = model
+    adjustedR2List = c(adjustedR2List,sm$adj.r.squared)
+  }
+  
+  optIdx = which.max(adjustedR2List)
+  fit = modelList[[optIdx]]
+  data = data.frame(doses,times)
+  
+  return(list(optMod = fit, optr2 = adjustedR2List[optIdx], data = data,i=optIdx))
+  
+}
+
+rotate <- function(x) t(apply(x, 2, rev))
+
+
+
+
+
 #'
 #' This function identify the BMD area and the IC50 value in the time and dose maps 
+#'
+#' @importFrom pracma gradient
 #'
 #' @param immy z-maps of the fitted 3D model, with doses on the columns and time points on the rows
 #' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
 #' @param geneName is a character string containing the gene name
-#' @BMD_threshold threshold defining the responsive gene value
+#' @param BMD_threshold threshold defining the responsive gene value
 #' 
 #' @return an object of class TinderMIX containing the fitted BMD object, the IC50 value. The function plot the map showing the responsive region.
 #'
-#' @examples
-#' data("FC_WY14643")
-#' exp_data = fc_data
-#' pheno_data = pdata
-#' PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#' ItemsList = build_items_list(PvalMat)
-#' responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-#' contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-#' geneName = "Fam129a"
-#' immy = contour_res$RPGenes[[geneName]][[3]]
-#' coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
-#' res = compute_BMD_IC50(immy,coord, geneName,BMD_threshold = 0.58)
 #' @export
 #'
 
@@ -84,9 +157,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   }
 
   #res = create_tic_tac_toe(map = apply(ternaryIMBMD, 2, rev), verso)
-  restt0 = create_tic_tac_toe(map = ternaryIMBMD, verso)
+  restt0 = label2DMap(map = ternaryIMBMD, verso = verso)
   
-  library(imager)
   res = bwtraceboundary(ternaryIMBMD = ternaryIMBMD)
   
   myContour = res$image_border
@@ -276,86 +348,5 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   return(ans)
   
 }
-
-
-
-create_tic_tac_toe = function(map, verso){
-  # which(map == min(map),arr.ind = T)
-  # which(map == max(map),arr.ind = T)
-  
-  ranges = cut(seq(5, 20, length.out=50),3)
-  
-  low = which(ranges==levels(ranges)[1])
-  middle = which(ranges==levels(ranges)[2])
-  high = which(ranges==levels(ranges)[3])
-  ids = list(low,middle,high)
-  
-  #ttt is a 3x3 matrix, with low-mid-high on the column and high-mid-low on the rows.
-  ttt = matrix(0, 3,3)
-  rownames(ttt) = c("High","Mid","Low")
-  colnames(ttt) = c("Low","Mid","High")
-  for(i in 3:1){
-    for(j in 1:3){
-      ttt[i,j] = mean(mean(map[ids[[i]],ids[[j]]]))
-    }
-  }
-  
-  qq = quantile(ttt)
-  print(qq)
-  if(abs(qq[5]) >= abs(qq[1])){
-    ttt_lab = ttt>=qq[4]
-  }else{
-    ttt_lab= ttt<=qq[2]
-  }
-  
-  ttt = ttt*verso
-  
-  return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
-  
-}
-
-bwtraceboundary= function(ternaryIMBMD){
-  diffMat = 0 * ternaryIMBMD
-  for(i in 1:nrow(ternaryIMBMD)){
-    idx = which(ternaryIMBMD[i,]==1)
-    diffMat[i, idx[1]] = 1
-    diffMat[i, idx[length(idx)]] = 1
-  }
-  
-  for(i in 1:ncol(ternaryIMBMD)){
-    idx = which(ternaryIMBMD[,i]==1)
-    diffMat[idx[1],i] = 1
-    diffMat[idx[length(idx)],i] = 1
-  }
-  
-  #image(diffMat)
-  
-  image_border = which(diffMat==1,arr.ind = 1)
-  return(list(diffMat=diffMat,image_border=image_border))
-}
-
-optimal_fitting_by_r2 = function(doses, times){
-  n = 1:4
-  modelList = list()
-  adjustedR2List = c()
-  for(i in n){
-    model=lm( bquote( times ~ poly(doses,.(i)) ), data=data.frame(doses=doses, times = times)) 
-    
-    # model <- lm(times ~ poly(doses,i))
-    sm = summary(model)
-    modelList[[i]] = model
-    adjustedR2List = c(adjustedR2List,sm$adj.r.squared)
-  }
-  
-  optIdx = which.max(adjustedR2List)
-  fit = modelList[[optIdx]]
-  data = data.frame(doses,times)
-  
-  return(list(optMod = fit, optr2 = adjustedR2List[optIdx], data = data,i=optIdx))
-  
-}
-
-rotate <- function(x) t(apply(x, 2, rev))
-
 
 

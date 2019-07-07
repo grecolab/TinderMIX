@@ -25,14 +25,3 @@ a list with the clustering results and statistics for the optimal number of clus
 \description{
 It clusters the contour plots by also estimating the ideal number of clusters
 }
-\examples{
-data("FC_WY14643")
-exp_data = fc_data
-pheno_data = pdata
-  PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-  ItemsList = build_items_list(PvalMat)
-  responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-  contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-  hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
-
-}

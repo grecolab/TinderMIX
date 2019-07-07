@@ -9,13 +9,6 @@
 #' @param dose_index numeric value specifing the column of the phenodata table containing the doses
 #' @param time_point_index numeric value specifing the column of the phenodata table containing the time points
 #' @return a matrix with pvalue associated to the dose, timepoint and the dose*timepoint effect
-#'
-#' @examples
-#' data("FC_WY14643")
-#' exp_data = fc_data
-#' pheno_data = pdata
-#' PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#'
 #' @export
 #'
 #'
@@ -58,12 +51,6 @@ compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point
 #' @param p.val.th is the threshold at which p.values are considered significant. Default = 0.01
 #' @return a list containing the genes in each position of the venn diagram
 #'
-#' @examples
-#' data("FC_WY14643")
-#' exp_data = fc_data
-#' pheno_data = pdata
-#' PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-#' ItemsList = build_items_list(PvalMat)
 #'
 #' @export
 #'

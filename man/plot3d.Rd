@@ -17,14 +17,3 @@ a plotly object
 \description{
 This function plots the fitted 3d surface for the expression value of a gene
 }
-\examples{
-  data("WY14643")
-  exp_data = WY14643$exp_data
-  pheno_data = WY14643$pheno_data
-  PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-  ItemsList = build_items_list(PvalMat)
-  responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-  contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-  plot3d(toPlot = contour_res$RPGenes[["Pdk4"]],DF = contour_res$DFList[["Pdk4"]])
-
-}

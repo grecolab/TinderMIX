@@ -16,10 +16,5 @@
 #'
 #' @source \href{https://dbarchive.biosciencedbc.jp/en/open-tggates/desc.html}{Archive}
 #'
-#' @examples
-#' data(FC_WY14642)
-#' head(fc_data)
-#' head(pdata)
-#'
 #'
 NULL

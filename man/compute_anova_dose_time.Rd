@@ -21,10 +21,3 @@ a matrix with pvalue associated to the dose, timepoint and the dose*timepoint ef
 \description{
 This function computes a two way anova between dose and time for the expression value of every genes
 }
-\examples{
-data("FC_WY14643")
-exp_data = fc_data
-pheno_data = pdata
-PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-
-}

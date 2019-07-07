@@ -5,7 +5,7 @@
 \title{This function fits a 3D regression model for every gene in the dataset and creates an N x N contour plot}
 \usage{
 create_contour(exp_data, pheno_data, responsive_genes, dose_index,
-  time_point_index, gridSize = 50, modelType = "poly2")
+  time_point_index, gridSize = 50)
 }
 \arguments{
 \item{exp_data}{is the expression matrix with genes on the rows and samples on the columns}
@@ -19,8 +19,6 @@ create_contour(exp_data, pheno_data, responsive_genes, dose_index,
 \item{time_point_index}{numeric value specifing the column of the phenodata table containing the time points}
 
 \item{gridSize}{numeric value specifing size of the z-grid}
-
-\item{modelType}{string showing the model to fit. Possible options: poly2 and loess}
 }
 \value{
 a list with list with estimated contour objects, 3D fitted objects, fitting statistics and feature values for time and dose
@@ -31,14 +29,4 @@ a list with list with estimated contour objects, 3D fitted objects, fitting stat
 }
 \description{
 This function fits a 3D regression model for every gene in the dataset and creates an N x N contour plot
-}
-\examples{
-  data("FC_WY14643")
-  exp_data = fc_data
-  pheno_data = pdata
-  PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-  ItemsList = build_items_list(PvalMat)
-  responsive_genes = unique(c(unlist(ItemsList$Dose), unlist(ItemsList$Time), unlist(ItemsList$`Dose:Time:DoseTime`), unlist(ItemsList$`Dose:Time`)))
-  contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-
 }
