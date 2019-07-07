@@ -23,6 +23,12 @@ test_that("pipeline works", {
   contour_res = suppressMessages(create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50))
   SST = contour_res$Stats
   
+  print("Example of map analysis")
+  geneName = "Fam129a"
+  immy = contour_res$RPGenes[[geneName]][[3]]
+  coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
+  res = compute_BMD_IC50(immy,coord, geneName,BMD_threshold = 0.58)
+  
   print("Step 4: Performing clustering")
   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
 
@@ -34,17 +40,6 @@ test_that("pipeline works", {
   
   print("Step 7: identify cluster labels")
   create_tic_tac_toe(map = t(clpr$meanXYZ[[1]][[3]]))
-  
-  # GL = ItemsList[c("Dose","Time","Dose:Time:DoseTime","Dose:Time")]
-  # classes = rep("D", length(responsive_genes))
-  # names(classes) = responsive_genes
-  # classes[names(classes) %in% GL$Time] = "T"
-  # classes[names(classes) %in% GL$`Dose:Time`] = "DT"
-  # classes[names(classes) %in% GL$`Dose:Time:DoseTime`] = "DTDT"
-  # 
-  # #clpr$optcl
-  # res = fisher_test(classes = classes,clustering = hls_res$hls_res[[5]]$clusters,matrixRownames = names(classes) ,nCluster = 10)
-  # View(res$BFT)
   
   enrRes = compute_enrichment(clpr$optcl,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
   #write_xlsx_for_funmappone(clpr$optcl,filePath = "../contour_clustering/gene_clustering2.xlsx")
