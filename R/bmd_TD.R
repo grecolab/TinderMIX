@@ -21,11 +21,19 @@ label2DMap = function(map, verso){
   }
   
   qq = quantile(ttt)
-  print(qq)
+  #print(qq)
   if(abs(qq[5]) >= abs(qq[1])){
-    ttt_lab = ttt>=qq[4]
+    if(qq[4]>0){
+      ttt_lab = ttt>=qq[4]
+    }else{
+      ttt_lab = ttt>=qq[5]
+    }
   }else{
-    ttt_lab= ttt<=qq[2]
+    if(qq[2]>0){
+      ttt_lab= ttt<=qq[2]
+    }else{
+      ttt_lab= ttt<=qq[1]
+    }
   }
   
   ttt = ttt*verso
@@ -105,7 +113,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   immy = rotate(rotate(rotate(immy)))
 
   if(max(abs(immy))<BMD_threshold){
-    print("No DE gene")
+    #print("No DE gene")
     return(NULL)
   }
   
@@ -220,6 +228,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   
   image(coord[,1], coord[,2], rotate(ternaryIMBMD), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
   
+  
   #image(coord[,1], coord[,2], t(ternaryIMBMD[50:1,]), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time")
   #points(dosesBMD, timesBMD)
   fitBMDOut = NULL
@@ -240,7 +249,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     newdat = data.frame(doses = seq(min(dosesBMD), max(dosesBMD), length.out = 100))
     newdat$pred = predict(fitBMDOut, newdata = newdat)
     lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
-    
+    BMDx =  newdat$doses
+    BMDy = newdat$pred
   }else if(dosesSTDBMDLeft< dosesSTDEpsLeft && dosesSTDBMDSouth >= dosesSTDEpsSouth){ #fit only sounth and draw a vline for the left
     # vertical points to be fit, LSM doesn't work, so we considier the mean and draw a line
     # non-horizontal points to be fit, LSM should work
@@ -253,7 +263,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     newdat$pred = predict(fitBMDOut, newdata = newdat)
     lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
     abline(v = dosesMeanBMDLeft,col = "yellow", lwd = 3)
-    
+    BMDx =  newdat$doses
+    BMDy = newdat$pred
   }else if(dosesSTDBMDLeft>= dosesSTDEpsLeft && dosesSTDBMDSouth< dosesSTDEpsSouth){
     #non-vertical points to be fit, LSM should work
     #horizontal points to be fit, so we considier the mean and draw a line
@@ -266,6 +277,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     newdat$pred = predict(fitBMDOut, newdata = newdat)
     lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
     abline(h = dosesMeanBMDSouth)
+    BMDx =  newdat$doses
+    BMDy = newdat$pred
   }
 
   #Identify IC50
@@ -320,6 +333,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     newdat = data.frame(doses = seq(min(dosesIC50), max(dosesIC50),  length.out = 100))
     newdat$pred = predict(fitBMDOut, newdata = newdat)
     lines(x = newdat$doses, y = newdat$pred, col = "red", lwd = 3)
+    IC50x =  newdat$doses
+    IC50y = newdat$pred
   }
   
   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
@@ -331,6 +346,12 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
          border = c("darkgreen","blue",NA,NA),
          lwd = c(NA,NA,3,3),
          xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
+  
+  p = plot_ly(x = coord[,1],y=coord[,2], z = t(rotate(immy)), type = "contour")%>% 
+    add_trace(x = IC50x, y = IC50y, type = "scatter", mode = "line", name = "IC50", width=10) %>% 
+    add_trace(x = BMDx, y = BMDy, type = "scatter", mode= "line", name = "BMD",width=10) %>%
+    add_trace(x = coord[,1], y = coord[,2], z = t(rotate(ternaryIMBMD)), opacity = 0.2, showscale = FALSE) 
+  
   
   ans = list()
   ans$immy = immy
@@ -344,6 +365,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   ans$IC50 = meanDoseInMap
   ans$binaryIMIC50=binaryIMIC50
   ans$IC50fit = resIC50
+  ans$plotlyplot = p
   class(ans) = 'TinderMIX'
   return(ans)
   
