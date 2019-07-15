@@ -113,8 +113,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   immy = rotate(rotate(rotate(immy)))
 
   if(max(abs(immy))<BMD_threshold){
-    #print("No DE gene")
-    return(NULL)
+    print("No DE gene")
+    return(1)
   }
   
   binaryIMBMD = immy
@@ -139,23 +139,64 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     ternaryIMBMD[abs(ternaryIMBMD)>=BMD_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
     ternaryIMBMD[abs(ternaryIMBMD)>=BMD_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
     ternaryIMBMD[abs(ternaryIMBMD)<BMD_threshold]=0; # BLUE: again non-eligible region
-    # image(coord[,1], coord[,2],rotate(ternaryIMBMD))
+     #image(coord[,1], coord[,2],rotate(ternaryIMBMD))
     # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   }
   
+  # image(coord[,1], coord[,2],rotate(ternaryIMBMD))
+  # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
+  # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
+  
   pixelsGreen = sum(ternaryIMBMD==1);
   pixelsYellow =sum(ternaryIMBMD==2);
   
-  #ternaryIMBMD = apply(ternaryIMBMD,2,rev)
+  #how many pixel do the yellow and green area have on the biggest dose
+  n50Green = sum(ternaryIMBMD[,50]==1)
+  n50Yellow=sum(ternaryIMBMD[,50]==2)
   
-  if (pixelsGreen> pixelsYellow){
+  tabG = table(which(ternaryIMBMD==1,arr.ind = T)[,2])
+  tabY = table(which(ternaryIMBMD==2,arr.ind = T)[,2])
+  
+  minG = min(as.numeric(names(tabG)))
+  minY = min(as.numeric(names(tabY)))
+
+  if((n50Yellow+n50Green)==0){ #none of the two areaa reach the highest dose
+    print("No responsive area")
+    return(2)
+  }
+  
+  if(n50Yellow==0){
+    score_g  = 1000
+    score_y = 0
+  }else{
+    if(n50Green==0){
+    score_g  = 0
+    score_y = 1000
+    }else{
+      gs50 = n50Green/(n50Yellow)
+      gsArea = pixelsGreen/(pixelsYellow)
+      
+      ys50 = n50Yellow/(n50Green+1)
+      ysArea = pixelsYellow/(pixelsGreen+1)
+      
+      score_g  = gs50 + gsArea - minG
+      score_y = ys50 + ysArea - minY
+    }
+  }
+  
+  ternaryCopy = ternaryIMBMD
+  
+  if (score_g > score_y){
+    badDigit = 2
     ternaryIMBMD[ternaryIMBMD !=1]=0; #everything different than 1 is set to zero. only the green part is set to 1
     xx = which(ternaryIMBMD==1, arr.ind = T)[1,] # finds the first point on the contour in the image to initialize bwtraceboundary
     r = xx[1]
     c = xx[2]
     verso = 1; # crescente
   }else{
+    badDigit = 1
+
     ternaryIMBMD[ternaryIMBMD == 1] = 0; #set the green part to 0.
     ternaryIMBMD[ternaryIMBMD == 2] = 1; #set the yellow part to 1.
     xx = which(ternaryIMBMD==1, arr.ind = T)[1,] #finds the first point on the contour in the image to initialize bwtraceboundary
@@ -163,195 +204,124 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     c = xx[2] 
     verso = -1; # decrescente
   }
-
-  #res = create_tic_tac_toe(map = apply(ternaryIMBMD, 2, rev), verso)
-  restt0 = label2DMap(map = ternaryIMBMD, verso = verso)
   
-  res = bwtraceboundary(ternaryIMBMD = ternaryIMBMD)
-  
-  myContour = res$image_border
-  #image(coord[,1], coord[,2], res$diffMat[50:1,]) #this plots the border
-  #image(coord[,1], coord[,2], t(res$diffMat[50:1,])) #this plots the border
-  
-  pixelDoses = myContour[,2]
-  pixelTimes = myContour[,1]
-  
-  indiciCol1 = which(pixelDoses==50)
-  indiciCol2 = which(pixelTimes==1)
-  indici = union(indiciCol1, indiciCol2)
-  
-  if(length(indici)>1){
-    #myContour = myContour[-indici,]
-    pixelDoses = pixelDoses[-indici]
-    pixelTimes = pixelTimes[-indici]
-  } 
-  #plot(pixelDoses, 51- pixelTimes)
-  
-  kLeft = 1;
-  kSouth = 1;
-  sideLeft = c()
-  sideSouth = c()
-  
-  for(i in 1:length(pixelDoses)){
-    if ( (ternaryIMBMD[pixelTimes[i], pixelDoses[i]+1]==1 && pixelDoses[i]==1) ||
-         (ternaryIMBMD[pixelTimes[i], pixelDoses[i]+1]==1 && 
-          ternaryIMBMD[pixelTimes[i], pixelDoses[i]-1]!=1)){ #check left side
-      sideLeft = rbind(sideLeft,c(pixelDoses[i], pixelTimes[i]))
-      #points(sideLeft[kLeft,1], sideLeft[kLeft,2], col = "red")
-      kLeft= kLeft+1;
-    }else if((ternaryIMBMD[pixelTimes[i]-1, pixelDoses[i]]==1 && pixelTimes[i]==50) || 
-             (ternaryIMBMD[pixelTimes[i]-1, pixelDoses[i]]==1 && ternaryIMBMD[pixelTimes[i]+1, pixelDoses[i]]!=1)){
-      sideSouth = rbind(sideSouth,c(pixelDoses[i], pixelTimes[i]))
-      #points(sideSouth[kSouth,1], sideSouth[kSouth,2], col = "green")   
-      kSouth = kSouth+1;
-      
+  # remove non BMD rows, cioe' rimuovi le righe, dove non ho tutti 1 a partire dalla dose BMD e la dose massima
+  toSetAsZero = c()
+  for(i in 1:nrow(ternaryIMBMD)){
+    nOnes = sum(ternaryIMBMD[i,])
+    if(nOnes>0){
+      numbers = which(ternaryIMBMD[i,]==1)
+      n = min(numbers)
+      if(abs(sum(numbers - n:50))>0){
+        toSetAsZero=c(toSetAsZero, i)
+      }
     }
   }
   
-  
-  dddLeft = cbind(coord[sideLeft[,1], 1], coord[51-sideLeft[,2], 2])
-  dddSouth = cbind(coord[sideSouth[,1], 1], coord[51-sideSouth[,2], 2])
-  
-  ddd = rbind(dddLeft,dddSouth)
-  timesBMD = ddd[,2]
-  dosesBMD = ddd[,1]
-  
-  timesBMDLeft = dddLeft[,2];
-  dosesBMDLeft = dddLeft[,1];
-  dosesMeanBMDLeft = mean(dosesBMDLeft)
-  dosesSTDBMDLeft = std(dosesBMDLeft)
-  
-  timesBMDSouth = dddSouth[,2]
-  dosesBMDSouth = dddSouth[,1]
-  dosesMeanBMDSouth = mean(timesBMDSouth)
-  dosesSTDBMDSouth = std(timesBMDSouth)
-  
-  image(coord[,1], coord[,2], rotate(ternaryIMBMD), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
-  
-  
-  #image(coord[,1], coord[,2], t(ternaryIMBMD[50:1,]), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time")
-  #points(dosesBMD, timesBMD)
-  fitBMDOut = NULL
-  
-  if (dosesSTDBMDLeft < dosesSTDEpsLeft && dosesSTDBMDSouth< dosesSTDEpsSouth){ #vertical and horizontal line
-    #vertical points to be fit, LSM doesn't work, so we considier the mean and draw a line
-    #horizontal points to be fit, so we considier the mean and draw a line
-    flagVerticalBMD = 1;
-    flagHorizontalBMD = 1;
-    abline(v = dosesMeanBMDLeft,col = "yellow", lwd = 3)
-    abline(h = dosesMeanBMDSouth,col = "yellow", lwd = 3)
-  }else if(dosesSTDBMDLeft>= dosesSTDEpsLeft && dosesSTDBMDSouth>= dosesSTDEpsSouth){ #fit both left and south
-    #non-vertical and non-horizontal points to be fit, LSM should work
-    res = optimal_fitting_by_r2(dosesBMD,timesBMD)
-    fitBMDOut = res$optMod
-    maxAdjRSquare = res$optr2
-    data = res$data
-    newdat = data.frame(doses = seq(min(dosesBMD), max(dosesBMD), length.out = 100))
-    newdat$pred = predict(fitBMDOut, newdata = newdat)
-    lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
-    BMDx =  newdat$doses
-    BMDy = newdat$pred
-  }else if(dosesSTDBMDLeft< dosesSTDEpsLeft && dosesSTDBMDSouth >= dosesSTDEpsSouth){ #fit only sounth and draw a vline for the left
-    # vertical points to be fit, LSM doesn't work, so we considier the mean and draw a line
-    # non-horizontal points to be fit, LSM should work
-    flagVerticalBMD = 1;
-    res = optimal_fitting_by_r2(dosesBMDSouth,timesBMDSouth)
-    fitBMDOut = res$optMod
-    maxAdjRSquare = res$optr2
-    data = res$data
-    newdat = data.frame(doses = seq(min(dosesBMDSouth), max(dosesBMDSouth), length.out = 100))
-    newdat$pred = predict(fitBMDOut, newdata = newdat)
-    lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
-    abline(v = dosesMeanBMDLeft,col = "yellow", lwd = 3)
-    BMDx =  newdat$doses
-    BMDy = newdat$pred
-  }else if(dosesSTDBMDLeft>= dosesSTDEpsLeft && dosesSTDBMDSouth< dosesSTDEpsSouth){
-    #non-vertical points to be fit, LSM should work
-    #horizontal points to be fit, so we considier the mean and draw a line
-    flagHorizontalBMD = 1;
-    res = optimal_fitting_by_r2(dosesBMDLeft,timesBMDLeft)
-    fitBMDOut = res$optMod
-    maxAdjRSquare = res$optr2
-    data = res$data
-    newdat = data.frame(doses = seq(min(dosesBMDLeft), max(dosesBMDLeft), length.out = 100))
-    newdat$pred = predict(fitBMDOut, newdata = newdat)
-    lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
-    abline(h = dosesMeanBMDSouth)
-    BMDx =  newdat$doses
-    BMDy = newdat$pred
-  }
-
-  #Identify IC50
-  maxDoseInMap = max(immy[ternaryIMBMD==1])
-  minDoseInMap = min(immy[ternaryIMBMD==1])
-  
-  meanDoseInMap = (maxDoseInMap + minDoseInMap)/2;
-  hh = hist(immy[ternaryIMBMD==1],plot=FALSE  )
-  nBreak = which((meanDoseInMap >= hh$breaks)==FALSE)[1]-1
-  perc = hh$counts[nBreak] / sum(hh$counts)
-  
-  #computing tolerance
-  if(perc>2){
-    IC50_mean_tol_perc = 0.025
-  }else{
-    IC50_mean_tol_perc = 0.05
+  if(length(toSetAsZero)>0){
+    ternaryIMBMD[toSetAsZero,]=0
   }
   
-  tol = abs(meanDoseInMap*IC50_mean_tol_perc)
-  
-  binaryIMIC50 = immy;
-  binaryIMIC50[binaryIMIC50<(meanDoseInMap - tol) | binaryIMIC50>(meanDoseInMap+tol)]=0
-  binaryIMIC50[binaryIMIC50>=(meanDoseInMap -tol) & binaryIMIC50<=(meanDoseInMap+tol)]=1
-  #image(coord[,1], coord[,2],rotate(binaryIMIC50)) #plot boundaries of the IC50 points
-  
-  binaryIMIC50 = binaryIMIC50 * ternaryIMBMD
-  
-  #binaryIMIC50 = rotate(rotate(rotate(binaryIMIC50)))
-  res = which(binaryIMIC50==1, arr.ind = T)
-  ccc = res[,1] #time
-  bbb = res[,2] #dose
-  
-  ddd = cbind(coord[bbb,1], coord[51- ccc,2])
-  timesIC50 = ddd[,2]
-  dosesIC50 = ddd[,1]
-  #points(dosesIC50, timesIC50,col = "red")
-  
-  dosesMeanIC50 = mean(dosesIC50)
-  dosesSTDIC50 = sd(dosesIC50)
-  resIC50 = NULL
-  if(dosesSTDIC50< dosesSTDEpsLeft){
-    #vertical points to be fit, LSM doesn't work, so we condier the mean
-    abline(v=dosesMeanIC50, col = "red", lwd = 3)
-  }else{
-    #non-vertical points to be fit, LSM should work
-    resIC50 = optimal_fitting_by_r2(doses = dosesIC50,times = timesIC50)
-    fitBMDOut = resIC50$optMod
-    maxAdjRSquare = resIC50$optr2
-    data = resIC50$data
-    i = resIC50$i
-    
-    newdat = data.frame(doses = seq(min(dosesIC50), max(dosesIC50),  length.out = 100))
-    newdat$pred = predict(fitBMDOut, newdata = newdat)
-    lines(x = newdat$doses, y = newdat$pred, col = "red", lwd = 3)
-    IC50x =  newdat$doses
-    IC50y = newdat$pred
+  if(sum(ternaryIMBMD)==0){
+    print("No responsive area")
+    return(2)
   }
   
+  #res = create_tic_tac_toe(map = apply(ternaryIMBMD, 2, rev), verso)
+  res = bwtraceboundary(ternaryIMBMD = ternaryIMBMD)
+  myContour = res$image_border
+  
+  goodPoints = c()
+  for(i in 1:50){
+    it = which(myContour[,1]==i) #riga
+    id = min(myContour[it,2]) # colonna
+    goodPoints = c(goodPoints,which(myContour[,1]==i & myContour[,2]==id))
+  }
+  
+  if(length(goodPoints)>0) myContour = myContour[goodPoints,]
+  
+  toSetAsZero = c() #### 
+  goodIdx = c()
+  for(i in 1:nrow(myContour)){
+    if(myContour[i,2]>1){
+      if(ternaryCopy[myContour[i,1],myContour[i,2]-1]==badDigit){
+        toSetAsZero = c(toSetAsZero,myContour[i,1])
+        goodIdx=c(goodIdx,i)
+      }
+        
+    }
+  }
+  
+  if(length(toSetAsZero)>0){
+    ternaryIMBMD[toSetAsZero,]=0
+    myContour = myContour[-goodIdx,]
+  }
+  
+  
+  image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
   legend(grconvertX(30, "device"), grconvertY(1, "device"),
-         c("Responsive Area", "Non responsive Area", "BMD","IC50"),
-         col =c(NA, NA,"yellow", "red"),
-         lty = c(NA,NA,1,1),
-         fill = c("darkgreen","blue",NA,NA),
-         border = c("darkgreen","blue",NA,NA),
-         lwd = c(NA,NA,3,3),
+         c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "BMD","IC50"),
+         col =c(NA, NA,NA,"gold", "red"),
+         lty = c(NA,NA,NA,1,1),
+         fill = c("darkblue","darkgreen","brown",NA,NA),
+         border = c("darkblue","darkgreen","brown",NA,NA),
+         lwd = c(NA,NA,NA,3,3),
          xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
   
-  p = plot_ly(x = coord[,1],y=coord[,2], z = t(rotate(immy)), type = "contour")%>% 
-    add_trace(x = IC50x, y = IC50y, type = "scatter", mode = "line", name = "IC50", width=10) %>% 
-    add_trace(x = BMDx, y = BMDy, type = "scatter", mode= "line", name = "BMD",width=10) %>%
-    add_trace(x = coord[,1], y = coord[,2], z = t(rotate(ternaryIMBMD)), opacity = 0.2, showscale = FALSE) 
   
+  if(sum(ternaryIMBMD)==0){
+    print("No dose response gene")
+    ans = list()
+    ans$immy = immy
+    ans$BMD_threshold = BMD_threshold
+    ans$gradient = gg
+    ans$binaryIMBMD = binaryIMBMD
+    ans$verso = verso
+    ans$label = NULL
+    ans$tracedarea = res
+    ans$bmd = NULL
+    ans$IC50 = NULL
+    class(ans) = 'TinderMIX'
+  }
+  
+  restt0 = label2DMap(map = ternaryIMBMD, verso = verso)
+  
+  BMD = ternaryIMBMD
+  BMD[BMD==0] = NA
+  image(coord[,1], coord[,2],rotate(BMD), col = adjustcolor( "yellow", alpha.f = 0.5), add = T)
+  
+  #image(coord[,1], coord[,2], rotate(ternaryIMBMD), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
+  ddd = cbind(coord[myContour[,2],1],coord[51-myContour[,1],2])
+  colnames(ddd) = c("Dose","Time")
+  lines(ddd, col = "gold", lwd = 4, pch=16)
+  points(ddd, col = "gold", lwd = 4, pch=16)
+  
+  IC50 = c()
+  for(i in 1:nrow(immy)){
+    
+    riga0 = immy[i,]
+    
+    riga = immy[i,is.na(BMD[i,])==FALSE]
+    if(length(riga)==0){
+      IC50 = c(IC50,NA)
+    }
+    if(length(riga)==1){
+      IC50 = c(IC50,which(riga0 == riga))
+    }else{
+      riga2 = sort(riga)
+      IC50=c(IC50,which(riga0==riga2[round(length(riga)/2)]))
+    }
+
+  }
+  
+  IC50 = IC50[myContour[,1]]
+  
+  ddd2= cbind(coord[IC50,1],coord[51-myContour[,1],2])
+  colnames(ddd2) = c("Dose","Time")
+  
+  lines(ddd2,col = "red", lwd = 4)
+  points(ddd2,col = "red", pch = 16)
   
   ans = list()
   ans$immy = immy
@@ -361,14 +331,280 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   ans$verso = verso
   ans$label = restt0
   ans$tracedarea = res
-  ans$fittedBMD = fitBMDOut
-  ans$IC50 = meanDoseInMap
-  ans$binaryIMIC50=binaryIMIC50
-  ans$IC50fit = resIC50
-  ans$plotlyplot = p
+  ans$bmd = ddd
+  ans$IC50 = ddd2
   class(ans) = 'TinderMIX'
   return(ans)
   
 }
 
 
+# compute_BMD_IC50_first_version = function(immy,coord, geneName,BMD_threshold = 0.58){
+# 
+#   dosesSTDEpsLeft = 1e-10
+#   dosesSTDEpsSouth = 1e-10
+#   flagVerticalBMD = 0
+# 
+#   immy = rotate(rotate(rotate(immy)))
+# 
+#   if(max(abs(immy))<BMD_threshold){
+#     print("No DE gene")
+#     return(NULL)
+#   }
+# 
+#   binaryIMBMD = immy
+#   binaryIMBMD[abs(binaryIMBMD)>=BMD_threshold]=1; # eligible region
+#   binaryIMBMD[abs(binaryIMBMD)<BMD_threshold]=0; # non-eligible region
+# 
+#   #image(rotate(binaryIMBMD)) # this image shows the eligible and non eligible region
+#   gg = gradient(immy,coord[,1], coord[,2])
+#   gx = gg$X
+#   gy = gg$Y
+#   X <- meshgrid(coord[,1],coord[,1])$X
+#   Y <- meshgrid(coord[,2],coord[,2])$Y
+# 
+#   #IDENTIFY BMD REGION
+#   if(sum(abs(binaryIMBMD) < BMD_threshold) == 0){  # % if non-eligible region in empty
+#     ternaryIMBMD = 0 * immy;
+#     ternaryIMBMD[abs(immy) >= BMD_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
+#     ternaryIMBMD[abs(immy) >= BMD_threshold & gx<0]=0; #% YELLOW: gradient component in dose direction negative, i.e. dose decreases
+#     #image(ternaryIMBMD)
+#   }else{
+#     ternaryIMBMD = immy;
+#     ternaryIMBMD[abs(ternaryIMBMD)>=BMD_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
+#     ternaryIMBMD[abs(ternaryIMBMD)>=BMD_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
+#     ternaryIMBMD[abs(ternaryIMBMD)<BMD_threshold]=0; # BLUE: again non-eligible region
+#     # image(coord[,1], coord[,2],rotate(ternaryIMBMD))
+#     # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
+#     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
+#   }
+# 
+#   pixelsGreen = sum(ternaryIMBMD==1);
+#   pixelsYellow =sum(ternaryIMBMD==2);
+# 
+#   #ternaryIMBMD = apply(ternaryIMBMD,2,rev)
+# 
+#   if (pixelsGreen> pixelsYellow){
+#     ternaryIMBMD[ternaryIMBMD !=1]=0; #everything different than 1 is set to zero. only the green part is set to 1
+#     xx = which(ternaryIMBMD==1, arr.ind = T)[1,] # finds the first point on the contour in the image to initialize bwtraceboundary
+#     r = xx[1]
+#     c = xx[2]
+#     verso = 1; # crescente
+#   }else{
+#     ternaryIMBMD[ternaryIMBMD == 1] = 0; #set the green part to 0.
+#     ternaryIMBMD[ternaryIMBMD == 2] = 1; #set the yellow part to 1.
+#     xx = which(ternaryIMBMD==1, arr.ind = T)[1,] #finds the first point on the contour in the image to initialize bwtraceboundary
+#     r = xx[1]
+#     c = xx[2]
+#     verso = -1; # decrescente
+#   }
+# 
+#   #res = create_tic_tac_toe(map = apply(ternaryIMBMD, 2, rev), verso)
+#   restt0 = label2DMap(map = ternaryIMBMD, verso = verso)
+# 
+#   res = bwtraceboundary(ternaryIMBMD = ternaryIMBMD)
+# 
+#   myContour = res$image_border
+#   #image(coord[,1], coord[,2], res$diffMat[50:1,]) #this plots the border
+#   #image(coord[,1], coord[,2], t(res$diffMat[50:1,])) #this plots the border
+# 
+#   pixelDoses = myContour[,2]
+#   pixelTimes = myContour[,1]
+# 
+#   indiciCol1 = which(pixelDoses==50)
+#   indiciCol2 = which(pixelTimes==1)
+#   indici = union(indiciCol1, indiciCol2)
+# 
+#   if(length(indici)>1){
+#     #myContour = myContour[-indici,]
+#     pixelDoses = pixelDoses[-indici]
+#     pixelTimes = pixelTimes[-indici]
+#   }
+#   #plot(pixelDoses, 51- pixelTimes)
+# 
+#   kLeft = 1;
+#   kSouth = 1;
+#   sideLeft = c()
+#   sideSouth = c()
+# 
+#   for(i in 1:length(pixelDoses)){
+#     if ( (ternaryIMBMD[pixelTimes[i], pixelDoses[i]+1]==1 && pixelDoses[i]==1) ||
+#          (ternaryIMBMD[pixelTimes[i], pixelDoses[i]+1]==1 &&
+#           ternaryIMBMD[pixelTimes[i], pixelDoses[i]-1]!=1)){ #check left side
+#       sideLeft = rbind(sideLeft,c(pixelDoses[i], pixelTimes[i]))
+#       #points(sideLeft[kLeft,1], sideLeft[kLeft,2], col = "red")
+#       kLeft= kLeft+1;
+#     }else if((ternaryIMBMD[pixelTimes[i]-1, pixelDoses[i]]==1 && pixelTimes[i]==50) ||
+#              (ternaryIMBMD[pixelTimes[i]-1, pixelDoses[i]]==1 && ternaryIMBMD[pixelTimes[i]+1, pixelDoses[i]]!=1)){
+#       sideSouth = rbind(sideSouth,c(pixelDoses[i], pixelTimes[i]))
+#       #points(sideSouth[kSouth,1], sideSouth[kSouth,2], col = "green")
+#       kSouth = kSouth+1;
+# 
+#     }
+#   }
+# 
+# 
+#   dddLeft = cbind(coord[sideLeft[,1], 1], coord[51-sideLeft[,2], 2])
+#   dddSouth = cbind(coord[sideSouth[,1], 1], coord[51-sideSouth[,2], 2])
+# 
+#   ddd = rbind(dddLeft,dddSouth)
+#   timesBMD = ddd[,2]
+#   dosesBMD = ddd[,1]
+# 
+#   timesBMDLeft = dddLeft[,2];
+#   dosesBMDLeft = dddLeft[,1];
+#   dosesMeanBMDLeft = mean(dosesBMDLeft)
+#   dosesSTDBMDLeft = std(dosesBMDLeft)
+# 
+#   timesBMDSouth = dddSouth[,2]
+#   dosesBMDSouth = dddSouth[,1]
+#   dosesMeanBMDSouth = mean(timesBMDSouth)
+#   dosesSTDBMDSouth = std(timesBMDSouth)
+# 
+#   image(coord[,1], coord[,2], rotate(ternaryIMBMD), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
+# 
+# 
+#   #image(coord[,1], coord[,2], t(ternaryIMBMD[50:1,]), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time")
+#   #points(dosesBMD, timesBMD)
+#   fitBMDOut = NULL
+# 
+#   if (dosesSTDBMDLeft < dosesSTDEpsLeft && dosesSTDBMDSouth< dosesSTDEpsSouth){ #vertical and horizontal line
+#     #vertical points to be fit, LSM doesn't work, so we considier the mean and draw a line
+#     #horizontal points to be fit, so we considier the mean and draw a line
+#     flagVerticalBMD = 1;
+#     flagHorizontalBMD = 1;
+#     abline(v = dosesMeanBMDLeft,col = "yellow", lwd = 3)
+#     abline(h = dosesMeanBMDSouth,col = "yellow", lwd = 3)
+#   }else if(dosesSTDBMDLeft>= dosesSTDEpsLeft && dosesSTDBMDSouth>= dosesSTDEpsSouth){ #fit both left and south
+#     #non-vertical and non-horizontal points to be fit, LSM should work
+#     res = optimal_fitting_by_r2(dosesBMD,timesBMD)
+#     fitBMDOut = res$optMod
+#     maxAdjRSquare = res$optr2
+#     data = res$data
+#     newdat = data.frame(doses = seq(min(dosesBMD), max(dosesBMD), length.out = 100))
+#     newdat$pred = predict(fitBMDOut, newdata = newdat)
+#     lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
+#     BMDx =  newdat$doses
+#     BMDy = newdat$pred
+#   }else if(dosesSTDBMDLeft< dosesSTDEpsLeft && dosesSTDBMDSouth >= dosesSTDEpsSouth){ #fit only sounth and draw a vline for the left
+#     # vertical points to be fit, LSM doesn't work, so we considier the mean and draw a line
+#     # non-horizontal points to be fit, LSM should work
+#     flagVerticalBMD = 1;
+#     res = optimal_fitting_by_r2(dosesBMDSouth,timesBMDSouth)
+#     fitBMDOut = res$optMod
+#     maxAdjRSquare = res$optr2
+#     data = res$data
+#     newdat = data.frame(doses = seq(min(dosesBMDSouth), max(dosesBMDSouth), length.out = 100))
+#     newdat$pred = predict(fitBMDOut, newdata = newdat)
+#     lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
+#     abline(v = dosesMeanBMDLeft,col = "yellow", lwd = 3)
+#     BMDx =  newdat$doses
+#     BMDy = newdat$pred
+#   }else if(dosesSTDBMDLeft>= dosesSTDEpsLeft && dosesSTDBMDSouth< dosesSTDEpsSouth){
+#     #non-vertical points to be fit, LSM should work
+#     #horizontal points to be fit, so we considier the mean and draw a line
+#     flagHorizontalBMD = 1;
+#     res = optimal_fitting_by_r2(dosesBMDLeft,timesBMDLeft)
+#     fitBMDOut = res$optMod
+#     maxAdjRSquare = res$optr2
+#     data = res$data
+#     newdat = data.frame(doses = seq(min(dosesBMDLeft), max(dosesBMDLeft), length.out = 100))
+#     newdat$pred = predict(fitBMDOut, newdata = newdat)
+#     lines(x = newdat$doses, y = newdat$pred, col = "yellow", lwd = 3)
+#     abline(h = dosesMeanBMDSouth)
+#     BMDx =  newdat$doses
+#     BMDy = newdat$pred
+#   }
+# 
+#   #Identify IC50
+#   maxDoseInMap = max(immy[ternaryIMBMD==1])
+#   minDoseInMap = min(immy[ternaryIMBMD==1])
+# 
+#   meanDoseInMap = (maxDoseInMap + minDoseInMap)/2;
+#   hh = hist(immy[ternaryIMBMD==1],plot=FALSE  )
+#   nBreak = which((meanDoseInMap >= hh$breaks)==FALSE)[1]-1
+#   perc = hh$counts[nBreak] / sum(hh$counts)
+# 
+#   #computing tolerance
+#   if(perc>2){
+#     IC50_mean_tol_perc = 0.025
+#   }else{
+#     IC50_mean_tol_perc = 0.05
+#   }
+# 
+#   tol = abs(meanDoseInMap*IC50_mean_tol_perc)
+# 
+#   binaryIMIC50 = immy;
+#   binaryIMIC50[binaryIMIC50<(meanDoseInMap - tol) | binaryIMIC50>(meanDoseInMap+tol)]=0
+#   binaryIMIC50[binaryIMIC50>=(meanDoseInMap -tol) & binaryIMIC50<=(meanDoseInMap+tol)]=1
+#   #image(coord[,1], coord[,2],rotate(binaryIMIC50)) #plot boundaries of the IC50 points
+# 
+#   binaryIMIC50 = binaryIMIC50 * ternaryIMBMD
+# 
+#   #binaryIMIC50 = rotate(rotate(rotate(binaryIMIC50)))
+#   res = which(binaryIMIC50==1, arr.ind = T)
+#   ccc = res[,1] #time
+#   bbb = res[,2] #dose
+# 
+#   ddd = cbind(coord[bbb,1], coord[51- ccc,2])
+#   timesIC50 = ddd[,2]
+#   dosesIC50 = ddd[,1]
+#   #points(dosesIC50, timesIC50,col = "red")
+# 
+#   dosesMeanIC50 = mean(dosesIC50)
+#   dosesSTDIC50 = sd(dosesIC50)
+#   resIC50 = NULL
+#   if(dosesSTDIC50< dosesSTDEpsLeft){
+#     #vertical points to be fit, LSM doesn't work, so we condier the mean
+#     abline(v=dosesMeanIC50, col = "red", lwd = 3)
+#   }else{
+#     #non-vertical points to be fit, LSM should work
+#     resIC50 = optimal_fitting_by_r2(doses = dosesIC50,times = timesIC50)
+#     fitBMDOut = resIC50$optMod
+#     maxAdjRSquare = resIC50$optr2
+#     data = resIC50$data
+#     i = resIC50$i
+# 
+#     newdat = data.frame(doses = seq(min(dosesIC50), max(dosesIC50),  length.out = 100))
+#     newdat$pred = predict(fitBMDOut, newdata = newdat)
+#     lines(x = newdat$doses, y = newdat$pred, col = "red", lwd = 3)
+#     IC50x =  newdat$doses
+#     IC50y = newdat$pred
+#   }
+# 
+#   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
+#   legend(grconvertX(30, "device"), grconvertY(1, "device"),
+#          c("Responsive Area", "Non responsive Area", "BMD","IC50"),
+#          col =c(NA, NA,"yellow", "red"),
+#          lty = c(NA,NA,1,1),
+#          fill = c("darkgreen","blue",NA,NA),
+#          border = c("darkgreen","blue",NA,NA),
+#          lwd = c(NA,NA,3,3),
+#          xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
+# 
+#   p = plot_ly(x = coord[,1],y=coord[,2], z = t(rotate(immy)), type = "contour")%>%
+#     add_trace(x = IC50x, y = IC50y, type = "scatter", mode = "line", name = "IC50", width=10) %>%
+#     add_trace(x = BMDx, y = BMDy, type = "scatter", mode= "line", name = "BMD",width=10) %>%
+#     add_trace(x = coord[,1], y = coord[,2], z = t(rotate(ternaryIMBMD)), opacity = 0.2, showscale = FALSE)
+# 
+# 
+#   ans = list()
+#   ans$immy = immy
+#   ans$BMD_threshold = BMD_threshold
+#   ans$gradient = gg
+#   ans$binaryIMBMD = binaryIMBMD
+#   ans$verso = verso
+#   ans$label = restt0
+#   ans$tracedarea = res
+#   ans$fittedBMD = fitBMDOut
+#   ans$IC50 = meanDoseInMap
+#   ans$binaryIMIC50=binaryIMIC50
+#   ans$IC50fit = resIC50
+#   ans$plotlyplot = p
+#   class(ans) = 'TinderMIX'
+#   return(ans)
+# 
+# }
+# 
+# 
+# 

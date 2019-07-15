@@ -24,7 +24,7 @@ test_that("pipeline works", {
   SST = contour_res$Stats
   
   print("Example of map analysis")
-  geneName = "Fam129a"
+  geneName = "Abcg8"
   immy = contour_res$RPGenes[[geneName]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   res = compute_BMD_IC50(immy,coord, geneName,BMD_threshold = 0.58)
@@ -37,6 +37,7 @@ test_that("pipeline works", {
 
   print("Step 6: print clustering prototype")
   plot_clusters_prototypes(meanXYZ = clpr$meanXYZ, nR = 2)
+  dim(clpr$meanXYZ)
   
   print("Step 7: identify cluster labels")
   create_tic_tac_toe(map = t(clpr$meanXYZ[[1]][[3]]))
