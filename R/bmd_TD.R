@@ -104,11 +104,11 @@ rotate <- function(x) t(apply(x, 2, rev))
 #' @export
 #'
 
-compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
+compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FALSE, path = "."){
   
-  dosesSTDEpsLeft = 1e-10
-  dosesSTDEpsSouth = 1e-10
-  flagVerticalBMD = 0
+  # dosesSTDEpsLeft = 1e-10
+  # dosesSTDEpsSouth = 1e-10
+  # flagVerticalBMD = 0
   
   immy = rotate(rotate(rotate(immy)))
 
@@ -144,9 +144,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   }
   
-  image(coord[,1], coord[,2],rotate(ternaryIMBMD))
-  contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
-  quiver(X,Y, gx, gy, scale = 0.5, col="blue")
+  # image(coord[,1], coord[,2],rotate(ternaryIMBMD))
+  # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
+  # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   
   pixelsGreen = sum(ternaryIMBMD==1);
   pixelsYellow =sum(ternaryIMBMD==2);
@@ -257,7 +257,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     myContour = myContour[-goodIdx,]
   }
   
-  png(filename = paste("pdf/", geneName, ".png", sep=""))
+  if(tosave){
+    png(filename = paste(path, geneName, ".png", sep=""))
+  }
   image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
   legend(grconvertX(30, "device"), grconvertY(1, "device"),
@@ -283,7 +285,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     ans$bmd = NULL
     ans$IC50 = NULL
     class(ans) = 'TinderMIX'
-    dev.off()
+    if(tosave) dev.off()
     return(ans)
   }
   
@@ -324,7 +326,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   
   lines(ddd2,col = "red", lwd = 4)
   points(ddd2,col = "red", pch = 16)
-  dev.off()
+  if(tosave) dev.off()
   
   ans = list()
   ans$immy = immy
