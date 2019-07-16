@@ -132,7 +132,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   if(sum(abs(binaryIMBMD) < BMD_threshold) == 0){  # % if non-eligible region in empty
     ternaryIMBMD = 0 * immy;
     ternaryIMBMD[abs(immy) >= BMD_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
-    ternaryIMBMD[abs(immy) >= BMD_threshold & gx<0]=0; #% YELLOW: gradient component in dose direction negative, i.e. dose decreases
+    ternaryIMBMD[abs(immy) >= BMD_threshold & gx<0]=2; #% YELLOW: gradient component in dose direction negative, i.e. dose decreases
     #image(ternaryIMBMD)
   }else{
     ternaryIMBMD = immy;
@@ -144,9 +144,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   }
   
-  # image(coord[,1], coord[,2],rotate(ternaryIMBMD))
-  # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
-  # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
+  image(coord[,1], coord[,2],rotate(ternaryIMBMD))
+  contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
+  quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   
   pixelsGreen = sum(ternaryIMBMD==1);
   pixelsYellow =sum(ternaryIMBMD==2);
@@ -231,7 +231,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   res = bwtraceboundary(ternaryIMBMD = ternaryIMBMD)
   myContour = res$image_border
   
-  goodPoints = c()
+  goodPoints = c() #sono i punti esterni alla regione individuata, ovvero il primo punto per ogni riga
   for(i in 1:50){
     it = which(myContour[,1]==i) #riga
     id = min(myContour[it,2]) # colonna
@@ -244,7 +244,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   goodIdx = c()
   for(i in 1:nrow(myContour)){
     if(myContour[i,2]>1){
-      if(ternaryCopy[myContour[i,1],myContour[i,2]-1]==badDigit){
+      if(badDigit %in% ternaryCopy[myContour[i,1],1:myContour[i,2]-1]){
         toSetAsZero = c(toSetAsZero,myContour[i,1])
         goodIdx=c(goodIdx,i)
       }
@@ -257,7 +257,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     myContour = myContour[-goodIdx,]
   }
   
-  
+  png(filename = paste("pdf/", geneName, ".png", sep=""))
   image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
   legend(grconvertX(30, "device"), grconvertY(1, "device"),
@@ -277,19 +277,21 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
     ans$BMD_threshold = BMD_threshold
     ans$gradient = gg
     ans$binaryIMBMD = binaryIMBMD
-    ans$verso = verso
+    ans$verso = NULL
     ans$label = NULL
     ans$tracedarea = res
     ans$bmd = NULL
     ans$IC50 = NULL
     class(ans) = 'TinderMIX'
+    dev.off()
+    return(ans)
   }
   
   restt0 = label2DMap(map = ternaryIMBMD, verso = verso)
   
   BMD = ternaryIMBMD
   BMD[BMD==0] = NA
-  image(coord[,1], coord[,2],rotate(BMD), col = adjustcolor( "yellow", alpha.f = 0.5), add = T)
+  image(coord[,1], coord[,2],rotate(BMD), col = adjustcolor( "yellow", alpha.f = 0.2), add = T)
   
   #image(coord[,1], coord[,2], rotate(ternaryIMBMD), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
   ddd = cbind(coord[myContour[,2],1],coord[51-myContour[,1],2])
@@ -322,6 +324,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58){
   
   lines(ddd2,col = "red", lwd = 4)
   points(ddd2,col = "red", pch = 16)
+  dev.off()
   
   ans = list()
   ans$immy = immy

@@ -24,7 +24,7 @@ test_that("pipeline works", {
   SST = contour_res$Stats
   
   print("Example of map analysis")
-  geneName = "Abcg8"
+  geneName = "Tmem254" #"Acmsd
   immy = contour_res$RPGenes[[geneName]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   res = compute_BMD_IC50(immy,coord, geneName,BMD_threshold = 0.58)
