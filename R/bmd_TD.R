@@ -1,4 +1,27 @@
-
+#'
+#' This function assigns a label to contour map
+#'
+#' @param map matrix containing the z-map for a specific gene or cluster prototype
+#' @param th a threshold to define the portion of dose-response area to be identified as labels for the gene.
+#' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
+#' @param nTimeInt number of time related breaks in the gene label's table. default is 3
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")
+#' @return a list with 9x9 matrices specifying if the gene is active at low, mid or high time points and dose levels
+#'
+#' @examples
+#' data("FC_WY14643")
+#' exp_data = fc_data
+#' pheno_data = pdata
+#'   PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
+#'   ItemsList = build_items_list(PvalMat)
+#'   responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
+#'   contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
+#'   hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
+#'   clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
+#'   create_tic_tac_toe(map = t(clpr$meanXYZ[[1]][[3]]))
+#' @export
+#'
 label2DMap = function(map, th=0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low","Mid","High"), timeLabels = c("High","Mid","Low")){
   mapSize = ncol(map)
   rangesDoses = cut(seq(5, 20, length.out=mapSize),nDoseInt)
@@ -138,6 +161,78 @@ optimal_fitting_by_r2 = function(doses, times){
 }
 
 rotate <- function(x) t(apply(x, 2, rev))
+
+#'
+#' This function run the compute_BMD_IC50 for all genes and return a matrix with label associated to every gene
+#'
+#' @importFrom pracma gradient
+#'
+#' @param contour_res object resulting from the create_contour function
+#' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
+#' @param geneName is a character string containing the gene name
+#' @param activity_threshold threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls
+#' @param BMD_resonse_threhold a threshold to define the portion of dose-response area to be identified as labels for the gene.
+#' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
+#' @param nTimeInt number of time related breaks in the gene label's table. default is 3
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")
+#' @param tosave if true a png of the gene map is saved in path
+#' @param path path of the folder where to save the gene map
+#' @param relGenes vector of genes with signifincant pvalues from the fitting
+#' @return a list with two object: Mat is a matrix with genes on the rows and labels on the columns. GeneRes is a list of results from the compute_BMD_IC50 function, one for every gene
+#'
+#' @export
+#'
+
+run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.58, BMD_resonse_threhold = 0.95, 
+                            nDoseInt=3, nTimeInt=3, 
+                            doseLabels = c("Low","Mid","High"), 
+                            timeLabels = c("High","Mid","Low"), 
+                            tosave=FALSE, path = ".",
+                            relGenes,
+                            label_leg = c("Sensitive-High","Sensitive-Mid","Sensitive-Low", 
+                                          "Intermediate-High","Intermediate-Mid","Intermediate-Low",
+                                          "Resilient-High","Resilient-Mid","Resilient-Low")){
+  Map = list()
+  goodGenes = c()
+  GeneRes = list()
+  
+  pb = txtProgressBar(min = 1, max = length(contour_res$RPGenes), style = 3)
+  for(i in 1:length(contour_res$RPGenes)){
+    geneName = names(contour_res$RPGenes)[i]
+    
+    if((geneName %in% ggenes)==FALSE)
+      next
+    
+    immy = contour_res$RPGenes[[geneName]][[3]]
+    coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
+    tryCatch({
+      res = compute_BMD_IC50(immy,coord, geneName,activity_threshold = activity_threshold,BMD_resonse_threhold=BMD_resonse_threhold,
+                             nDoseInt=nDoseInt,nTimeInt=nTimeInt,doseLabels=doseLabels,timeLabels=timeLabels,tosave = tosave,path = path)
+      GeneRes[[geneName]] = res
+      if(is.null(res$verso)==FALSE){
+        labels =  as.vector(res$label$ttt_label)
+        Map[[geneName]] =  c(labels,res$verso)
+        goodGenes = c(goodGenes,geneName)
+      }
+    }, error = function(e) {
+      print(NULL)
+    })
+    setTxtProgressBar(pb,i)
+  }
+  close(pb)
+  Mat = do.call(rbind,Map)
+  colnames(Mat) = c(label_leg,"Verso")
+  verso = Mat[,"Verso"]
+  Mat = Mat[,-ncol(Mat)]
+  for(i in 1:nrow(Mat)){
+    Mat[i,] = Mat[i,]* verso[i]
+  }
+
+  #MMA = cbind(Mat, rowSums(abs(Mat)))
+  return(list(Mat=Mat,GeneRes=GeneRes))
+}
+
 
 #'
 #' This function identify the BMD area and the IC50 value in the time and dose maps 
