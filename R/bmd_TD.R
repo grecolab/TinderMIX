@@ -1,46 +1,100 @@
 
-label2DMap = function(map, verso){
-  # which(map == min(map),arr.ind = T)
-  # which(map == max(map),arr.ind = T)
+label2DMap = function(map, th=0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low","Mid","High"), timeLabels = c("High","Mid","Low")){
+  mapSize = ncol(map)
+  rangesDoses = cut(seq(5, 20, length.out=mapSize),nDoseInt)
+  rangesTimes = cut(seq(5, 20, length.out=mapSize),nTimeInt)
   
-  ranges = cut(seq(5, 20, length.out=50),3)
+  idsDoses = list()
+  for(i in 1:nDoseInt){
+    idsDoses[[i]] = which(rangesDoses==levels(rangesDoses)[i])
+  }
   
-  low = which(ranges==levels(ranges)[1])
-  middle = which(ranges==levels(ranges)[2])
-  high = which(ranges==levels(ranges)[3])
-  ids = list(low,middle,high)
+  idsTimes = list()
+  for(i in 1:nTimeInt){
+    idsTimes[[i]] = which(rangesTimes==levels(rangesTimes)[i])
+  }
+  
   
   #ttt is a 3x3 matrix, with low-mid-high on the column and high-mid-low on the rows.
-  ttt = matrix(0, 3,3)
-  rownames(ttt) = c("High","Mid","Low")
-  colnames(ttt) = c("Low","Mid","High")
-  for(i in 3:1){
-    for(j in 1:3){
-      ttt[i,j] = mean(mean(map[ids[[i]],ids[[j]]]))
+  ttt = matrix(0, nrow = nTimeInt,ncol = nDoseInt)
+  rownames(ttt) = timeLabels
+  colnames(ttt) = doseLabels
+  for(i in nTimeInt:1){
+    for(j in 1:nDoseInt){
+      ttt[i,j] = mean(mean(map[idsTimes[[i]],idsDoses[[j]]]))
     }
   }
   
   qq = quantile(ttt)
-  #print(qq)
+  
   if(abs(qq[5]) >= abs(qq[1])){
-    if(qq[4]>0){
-      ttt_lab = ttt>=qq[4]
+    qq1 = quantile(ttt, th)
+    
+    if(qq1>0){
+      ttt_lab = ttt>=qq1
     }else{
-      ttt_lab = ttt>=qq[5]
+      ttt_lab = ttt>=quantile(ttt,1)
     }
   }else{
-    if(qq[2]>0){
-      ttt_lab= ttt<=qq[2]
+    qq1 = quantile(ttt, 1-th)
+    
+    if(qq1>0){
+      ttt_lab= ttt<=qq1
     }else{
-      ttt_lab= ttt<=qq[1]
+      ttt_lab= ttt<=quantile(ttt,0)
     }
   }
   
-  ttt = ttt*verso
+  ttt = ttt
   
   return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
   
 }
+
+# label2DMap = function(map, th=0.95){
+#   ranges = cut(seq(5, 20, length.out=50),3)
+#   
+#   low = which(ranges==levels(ranges)[1])
+#   middle = which(ranges==levels(ranges)[2])
+#   high = which(ranges==levels(ranges)[3])
+#   ids = list(low,middle,high)
+#   
+#   #ttt is a 3x3 matrix, with low-mid-high on the column and high-mid-low on the rows.
+#   ttt = matrix(0, 3,3)
+#   rownames(ttt) = c("High","Mid","Low")
+#   colnames(ttt) = c("Low","Mid","High")
+#   for(i in 3:1){
+#     for(j in 1:3){
+#       ttt[i,j] = mean(mean(map[ids[[i]],ids[[j]]]))
+#     }
+#   }
+#   
+#   qq = quantile(ttt)
+# 
+#   if(abs(qq[5]) >= abs(qq[1])){
+#     qq1 = quantile(ttt, th)
+#     
+#     if(qq1>0){
+#       ttt_lab = ttt>=qq1
+#     }else{
+#       ttt_lab = ttt>=quantile(ttt,1)
+#     }
+#   }else{
+#     qq1 = quantile(ttt, 1-th)
+#     
+#     if(qq1>0){
+#       ttt_lab= ttt<=qq1
+#     }else{
+#       ttt_lab= ttt<=quantile(ttt,0)
+#     }
+#   }
+#   
+#   ttt = ttt
+#   
+#   return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
+#   
+# }
+
 
 bwtraceboundary= function(ternaryIMBMD){
   diffMat = 0 * ternaryIMBMD
@@ -85,10 +139,6 @@ optimal_fitting_by_r2 = function(doses, times){
 
 rotate <- function(x) t(apply(x, 2, rev))
 
-
-
-
-
 #'
 #' This function identify the BMD area and the IC50 value in the time and dose maps 
 #'
@@ -97,14 +147,20 @@ rotate <- function(x) t(apply(x, 2, rev))
 #' @param immy z-maps of the fitted 3D model, with doses on the columns and time points on the rows
 #' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
 #' @param geneName is a character string containing the gene name
-#' @param BMD_threshold threshold defining the responsive gene value
-#' 
+#' @param activity_threshold threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls
+#' @param BMD_resonse_threhold a threshold to define the portion of dose-response area to be identified as labels for the gene.
+#' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
+#' @param nTimeInt number of time related breaks in the gene label's table. default is 3
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")
+#' @param tosave if true a png of the gene map is saved in path
+#' @param path path of the folder where to save the gene map
 #' @return an object of class TinderMIX containing the fitted BMD object, the IC50 value. The function plot the map showing the responsive region.
 #'
 #' @export
 #'
 
-compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FALSE, path = "."){
+compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_resonse_threhold = 0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low","Mid","High"), timeLabels = c("High","Mid","Low"), tosave=FALSE, path = "."){
   
   # dosesSTDEpsLeft = 1e-10
   # dosesSTDEpsSouth = 1e-10
@@ -112,14 +168,14 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FA
   
   immy = rotate(rotate(rotate(immy)))
 
-  if(max(abs(immy))<BMD_threshold){
+  if(max(abs(immy))<activity_threshold){
     print("No DE gene")
     return(1)
   }
   
   binaryIMBMD = immy
-  binaryIMBMD[abs(binaryIMBMD)>=BMD_threshold]=1; # eligible region
-  binaryIMBMD[abs(binaryIMBMD)<BMD_threshold]=0; # non-eligible region
+  binaryIMBMD[abs(binaryIMBMD)>=activity_threshold]=1; # eligible region
+  binaryIMBMD[abs(binaryIMBMD)<activity_threshold]=0; # non-eligible region
   
   #image(rotate(binaryIMBMD)) # this image shows the eligible and non eligible region
   gg = gradient(immy,coord[,1], coord[,2])
@@ -129,16 +185,16 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FA
   Y <- meshgrid(coord[,2],coord[,2])$Y
   
   #IDENTIFY BMD REGION
-  if(sum(abs(binaryIMBMD) < BMD_threshold) == 0){  # % if non-eligible region in empty
+  if(sum(abs(binaryIMBMD) < activity_threshold) == 0){  # % if non-eligible region in empty
     ternaryIMBMD = 0 * immy;
-    ternaryIMBMD[abs(immy) >= BMD_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
-    ternaryIMBMD[abs(immy) >= BMD_threshold & gx<0]=2; #% YELLOW: gradient component in dose direction negative, i.e. dose decreases
+    ternaryIMBMD[abs(immy) >= activity_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
+    ternaryIMBMD[abs(immy) >= activity_threshold & gx<0]=2; #% YELLOW: gradient component in dose direction negative, i.e. dose decreases
     #image(ternaryIMBMD)
   }else{
     ternaryIMBMD = immy;
-    ternaryIMBMD[abs(ternaryIMBMD)>=BMD_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
-    ternaryIMBMD[abs(ternaryIMBMD)>=BMD_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
-    ternaryIMBMD[abs(ternaryIMBMD)<BMD_threshold]=0; # BLUE: again non-eligible region
+    ternaryIMBMD[abs(ternaryIMBMD)>=activity_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
+    ternaryIMBMD[abs(ternaryIMBMD)>=activity_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
+    ternaryIMBMD[abs(ternaryIMBMD)<activity_threshold]=0; # BLUE: again non-eligible region
      #image(coord[,1], coord[,2],rotate(ternaryIMBMD))
     # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
@@ -276,7 +332,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FA
     print("No dose response gene")
     ans = list()
     ans$immy = immy
-    ans$BMD_threshold = BMD_threshold
+    ans$activity_threshold = activity_threshold
     ans$gradient = gg
     ans$binaryIMBMD = binaryIMBMD
     ans$verso = NULL
@@ -289,7 +345,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FA
     return(ans)
   }
   
-  restt0 = label2DMap(map = ternaryIMBMD, verso = verso)
+  restt0 = label2DMap(map = ternaryIMBMD)
   
   BMD = ternaryIMBMD
   BMD[BMD==0] = NA
@@ -330,7 +386,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FA
   
   ans = list()
   ans$immy = immy
-  ans$BMD_threshold = BMD_threshold
+  ans$activity_threshold = activity_threshold
   ans$gradient = gg
   ans$binaryIMBMD = binaryIMBMD
   ans$verso = verso
@@ -612,4 +668,47 @@ compute_BMD_IC50 = function(immy,coord, geneName,BMD_threshold = 0.58, tosave=FA
 # }
 # 
 # 
-# 
+
+
+# label2DMap_first_version = function(map, verso){
+#   # which(map == min(map),arr.ind = T)
+#   # which(map == max(map),arr.ind = T)
+#   
+#   ranges = cut(seq(5, 20, length.out=50),3)
+#   
+#   low = which(ranges==levels(ranges)[1])
+#   middle = which(ranges==levels(ranges)[2])
+#   high = which(ranges==levels(ranges)[3])
+#   ids = list(low,middle,high)
+#   
+#   #ttt is a 3x3 matrix, with low-mid-high on the column and high-mid-low on the rows.
+#   ttt = matrix(0, 3,3)
+#   rownames(ttt) = c("High","Mid","Low")
+#   colnames(ttt) = c("Low","Mid","High")
+#   for(i in 3:1){
+#     for(j in 1:3){
+#       ttt[i,j] = mean(mean(map[ids[[i]],ids[[j]]]))
+#     }
+#   }
+#   
+#   qq = quantile(ttt)
+#   #print(qq)
+#   if(abs(qq[5]) >= abs(qq[1])){
+#     if(qq[4]>0){
+#       ttt_lab = ttt>=qq[4]
+#     }else{
+#       ttt_lab = ttt>=qq[5]
+#     }
+#   }else{
+#     if(qq[2]>0){
+#       ttt_lab= ttt<=qq[2]
+#     }else{
+#       ttt_lab= ttt<=qq[1]
+#     }
+#   }
+#   
+#   ttt = ttt*verso
+#   
+#   return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
+#   
+# } 

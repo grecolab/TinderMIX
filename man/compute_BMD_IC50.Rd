@@ -4,7 +4,10 @@
 \alias{compute_BMD_IC50}
 \title{This function identify the BMD area and the IC50 value in the time and dose maps}
 \usage{
-compute_BMD_IC50(immy, coord, geneName, BMD_threshold = 0.58)
+compute_BMD_IC50(immy, coord, geneName, activity_threshold = 0.58,
+  BMD_resonse_threhold = 0.95, nDoseInt = 3, nTimeInt = 3,
+  doseLabels = c("Low", "Mid", "High"), timeLabels = c("High", "Mid",
+  "Low"), tosave = FALSE, path = ".")
 }
 \arguments{
 \item{immy}{z-maps of the fitted 3D model, with doses on the columns and time points on the rows}
@@ -13,7 +16,21 @@ compute_BMD_IC50(immy, coord, geneName, BMD_threshold = 0.58)
 
 \item{geneName}{is a character string containing the gene name}
 
-\item{BMD_threshold}{threshold defining the responsive gene value}
+\item{activity_threshold}{threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls}
+
+\item{BMD_resonse_threhold}{a threshold to define the portion of dose-response area to be identified as labels for the gene.}
+
+\item{nDoseInt}{number of dose related breaks in the gene label's table. default is 3}
+
+\item{nTimeInt}{number of time related breaks in the gene label's table. default is 3}
+
+\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")}
+
+\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")}
+
+\item{tosave}{if true a png of the gene map is saved in path}
+
+\item{path}{path of the folder where to save the gene map}
 }
 \value{
 an object of class TinderMIX containing the fitted BMD object, the IC50 value. The function plot the map showing the responsive region.
