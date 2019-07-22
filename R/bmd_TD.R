@@ -249,7 +249,13 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_resonse_th
   }
 
   MMA = cbind(Mat, rowSums(abs(Mat)))
-  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes))
+  
+  labels = list()
+  for(i in 1:nrow(Mat)){
+    labels[[i]] = paste(colnames(Mat)[Mat[i,]!=0], collapse = " ")
+  }
+  
+  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes, labels=labels))
 }
 
 
@@ -285,6 +291,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   immy = rotate(rotate(rotate(immy)))
   
   activity_threshold = log2((10 + (10*activity_threshold))/10)
+  
+  #activity_threshold = log2((10 + (10*0.01))/10)
+  
   
   #activity_threshold = quantile(immy, activity_threshold)
   

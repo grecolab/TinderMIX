@@ -62,10 +62,11 @@ test_that("pipeline works", {
                                                 pvalFitting = pvalFitting,
                                                 pvalFitting.adj.method=pvalFitting.adj.method))
 
-  ggenes = contour_res$ggenes
   
-  geneName = "Pcbd1" #"Acmsd
+  geneName = "Hspbp1" #"Acmsd
   immy = contour_res$RPGenes[[geneName]][[3]]
+  
+  immy2 = clpr[[1]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   res2 = compute_BMD_IC50(immy,coord, geneName,
                           activity_threshold = activity_threshold,
@@ -80,33 +81,34 @@ test_that("pipeline works", {
   res = run_all_BMD_IC50(contour_res = contour_res,
                          activity_threshold = activity_threshold,  
                          BMD_resonse_threhold = BMD_resonse_threhold, 
-                         mode=mode,
+                         mode=mode, 
                          nDoseInt=nDoseInt, nTimeInt=nTimeInt, 
                          doseLabels = doseLabels, timeLabels = timeLabels,
                          tosave=FALSE, addLegend = FALSE, path = ".",
-                         relGenes = ggenes, toPlot = FALSE)
+                         relGenes = contour_res$ggenes, toPlot = FALSE)
   
   print("Step 4: Performing clustering based on gene maps")
-  hls_res = hls_genes_clustering(contour_res$GenesMap[,rownames(res$Mat)],  nClust = nClust, method=method, hls.method = hls.method)
+  hls_res = hls_genes_clustering(GenesMap = contour_res$GenesMap[,rownames(res$Mat)],  nClust = nClust, method=method, hls.method = hls.method)
 
   print("Step 5: Identify optimal clustering and creating prototypes")
   pr = hls_res$hls_res[[which.max(hls_res$summaryMat[,5])]]
   optcl =pr$clusters
-  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
+  # mode can be, mean, median, or prot
+  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl, mode = "mean")
 
   # print("Step 4bis: performing clustering based on gene labels")
   hls_res = hls_labelbased_clustering(GenesMap=res$Mat, nClust = c(5,10,25,50,75,100,125,150,175,200,250,300), method="pearson", hls.method = "ward")
   # 
-  # print("Step 5: Identify optimal clustering and creating prototypes")
-  # pr = hls_res$hls_res[[which.max(summaryMat[,5])]]
-  # optcl =pr$clusters
-  # clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
-  # 
+  print("Step 5: Identify optimal clustering and creating prototypes")
+  pr = hls_res$hls_res[[which.max(summaryMat[,5])]]
+  optcl =pr$clusters
+  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
+
   
   print("Step 6: print clustering prototype and identify cluster labels")
-  plot_clusters_prototypes_plotly(meanXYZ=clpr$meanXYZ)
+  #plot_clusters_prototypes_plotly(meanXYZ=clpr$meanXYZ)
   
-  labels = plot_clusters_prototypes(meanXYZ=clpr$meanXYZ, nR = 2, nC = 5,
+  labels = plot_clusters_prototypes(meanXYZ = clpr, nR = 2, nC = 5,
                                       activity_threshold = activity_threshold,
                                       BMD_resonse_threhold = BMD_resonse_threhold,
                                       nDoseInt = nDoseInt, nTimeInt = nTimeInt, 

@@ -162,15 +162,20 @@ findCenter <- function(DB,clust_vector){
 #' @param clust_res the clustering results object given in input by the function hls_genes_clustering
 #' @param summaryMat the matrix with the summary statistics computed for the different k values
 #' @param contour_res a list with the contours object returned in output by the create_contour function
-#' @return a list with the contour objects for each clustering prototype and the vector of the optimal clustering
-#' \item{meanXYZ}{a list the contour object for each prototype}
-#' \item{optcl}{a vector with the optimal clustering}
-#'
+#' @param optcl a vector with the optimal clustering 
+#' @param mode string specifying the kind of prototype to be estimated. Possible values are mean, median or prot. mean and median compute the prototype as the mean of median values of the gene maps falling in the same cluster. Prot compute the prototype as the map of the most central gene in the cluster. default is mean
+#' @return a list, named meanXYZ,  with the contour objects for each clustering prototype 
 #'
 #' @export
 #'
 
-create_prototypes = function(clust_res,contour_res, optcl ){ #summaryMat
+create_prototypes = function(clust_res,contour_res, optcl, mode = "mean"){ #summaryMat
+  
+  if(mode %in% c("mean","median","prot")==FALSE){
+    print("wrong mode parameter")
+    return(NULL)
+  }
+  
   RPGenes = contour_res$RPGenes
   x = RPGenes[[1]][[1]]
   y = RPGenes[[1]][[2]]
@@ -183,22 +188,53 @@ create_prototypes = function(clust_res,contour_res, optcl ){ #summaryMat
   for(i in unique(optcl)){
     print(i)
     idxi = which(optcl == i)
-
     geneCluster[[i]] = names(optcl)[idxi]
-    mx = rep(0, length(x))
-    my = rep(0, length(y))
-    mz = matrix(0,nrow(z),nrow(z))
-    for(j in idxi){
-      mx = mx + RPGenes[[names(optcl)[j]]][[1]]
-      my = my + RPGenes[[names(optcl)[j]]][[2]]
-      mz = mz + RPGenes[[names(optcl)[j]]][[3]]
+    
+    if(mode == "mean"){ # the cluster prototype is the mean value of the z-maps
+      mx = rep(0, length(x))
+      my = rep(0, length(y))
+      mz = matrix(0,nrow(z),nrow(z))
+      for(j in idxi){
+        mx = mx + RPGenes[[names(optcl)[j]]][[1]]
+        my = my + RPGenes[[names(optcl)[j]]][[2]]
+        mz = mz + RPGenes[[names(optcl)[j]]][[3]]
+      }
+      mx = mx/length(idxi)
+      my = my/length(idxi)
+      mz = mz/length(idxi)
+      meanXYZ[[i]] = list(mx, my, mz)
+      
     }
-    mx = mx/length(idxi)
-    my = my/length(idxi)
-    mz = mz/length(idxi)
-    meanXYZ[[i]] = list(mx, my, mz)
+    
+    if(mode == "median"){ # the cluster prototype is the median value of the z-maps
+      mx = RPGenes[[names(optcl)[1]]][[1]]
+      my = RPGenes[[names(optcl)[1]]][[2]]
+      mz = matrix(0, nrow = nrow(RPGenes[[names(optcl)[1]]][[3]]),ncol = ncol(RPGenes[[names(optcl)[1]]][[3]]))
+    
+      for(i in 1:nrow(mz)){
+        for(j in 1:ncol(mz)){
+          values_gij = c()
+          for(gij in idxi){
+            values_gij = c(values_gij,RPGenes[[names(optcl)[gij]]][[3]][i,j])
+          }
+          mz[i,j]=median(values_gij)
+        }
+      }
+      meanXYZ[[i]] = list(mx, my, mz)
+      
+    }
+    
+    if(mode == "prot"){ # the cluster prototype is the most central gene in the cluster
+      mx = RPGenes[[names(optcl)[1]]][[1]]
+      my = RPGenes[[names(optcl)[1]]][[2]]
+      
+      mz = matrix(clust_res$hls_res[[which.max(clust_res$summaryMat[,5])]][[3]][i,], nrow(z),ncol(z))
+      meanXYZ[[i]] = list(mx, my, mz)
+      
+    }
+
   }
-  return(list(meanXYZ = meanXYZ, optcl = optcl))
+  return(meanXYZ)
 }
 
 #' this function plots the clusters prototype
@@ -231,7 +267,7 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
     mainplots = list()     # this will be the list with the label of every prototype
     for(i in 1:length(meanXYZ)){
       print(i)
-      immy = contour_res$RPGenes[[i]][[3]]
+      immy = meanXYZ[[i]][[3]]
       coord = cbind(contour_res$RPGenes[[i]][[1]],contour_res$RPGenes[[geneName]][[2]])
       res2 = compute_BMD_IC50(immy,coord, i,
                               activity_threshold = activity_threshold,
@@ -273,7 +309,7 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
     
     for(i in 1:length(meanXYZ)){
       print(i)
-      immy = contour_res$RPGenes[[i]][[3]]
+      immy = meanXYZ[[i]][[3]]
       coord = cbind(contour_res$RPGenes[[i]][[1]],contour_res$RPGenes[[geneName]][[2]])
       res2 = compute_BMD_IC50(immy,coord, mainplots[[i]],
                               activity_threshold = activity_threshold,
