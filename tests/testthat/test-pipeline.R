@@ -16,7 +16,7 @@ test_that("pipeline works", {
   pvalFitting = 0.05
   
   # parameter BMD identification
-  activity_threshold = 0.1
+  activity_threshold = 0.25
   BMD_resonse_threhold = 0.5
   mode = "cumulative"
   timeLabels = c("Late","Middle","Early")
@@ -96,19 +96,26 @@ test_that("pipeline works", {
   # mode can be, mean, median, or prot
   clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl, mode = "mean")
 
+  labels = plot_clusters_prototypes(meanXYZ = clpr, nR = 2, nC = 5,
+                                    activity_threshold = activity_threshold,
+                                    BMD_resonse_threhold = BMD_resonse_threhold,
+                                    nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
+                                    doseLabels = doseLabels, 
+                                    timeLabels = timeLabels)
+  
   # print("Step 4bis: performing clustering based on gene labels")
-  hls_res = hls_labelbased_clustering(GenesMap=res$Mat, nClust = c(5,10,25,50,75,100,125,150,175,200,250,300), method="pearson", hls.method = "ward")
+  hls_res_labels = hls_labelbased_clustering(GenesMap=res$Mat, nClust = nClust, method="pearson", hls.method = "ward")
   # 
   print("Step 5: Identify optimal clustering and creating prototypes")
-  pr = hls_res$hls_res[[which.max(summaryMat[,5])]]
-  optcl =pr$clusters
-  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
-
+  pr_labels = hls_res$hls_res[[which.max(hls_res$summaryMat[,5])]]
+  optcl_labels =pr$clusters
+  clpr_labels = create_prototypes(clust_res = hls_res_labels,contour_res = contour_res,optcl=optcl_labels, mode = "mean")
+  
   
   print("Step 6: print clustering prototype and identify cluster labels")
   #plot_clusters_prototypes_plotly(meanXYZ=clpr$meanXYZ)
   
-  labels = plot_clusters_prototypes(meanXYZ = clpr, nR = 2, nC = 5,
+  labels = plot_clusters_prototypes(meanXYZ = clpr_labels, nR = 4, nC = 4,
                                       activity_threshold = activity_threshold,
                                       BMD_resonse_threhold = BMD_resonse_threhold,
                                       nDoseInt = nDoseInt, nTimeInt = nTimeInt, 

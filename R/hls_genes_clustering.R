@@ -253,7 +253,9 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
                                     BMD_resonse_threhold = BMD_resonse_threhold,
                                     nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
                                     doseLabels = doseLabels, 
-                                    timeLabels = timeLabels){
+                                    timeLabels = timeLabels,
+                                    oma = c(0,1,1,0),
+                                    mar = rep(2,4)){
   
     label_leg = c()
     for(i in doseLabels){
@@ -268,7 +270,7 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
     for(i in 1:length(meanXYZ)){
       print(i)
       immy = meanXYZ[[i]][[3]]
-      coord = cbind(contour_res$RPGenes[[i]][[1]],contour_res$RPGenes[[geneName]][[2]])
+      coord = cbind(meanXYZ[[i]][[1]],meanXYZ[[i]][[2]])
       res2 = compute_BMD_IC50(immy,coord, i,
                               activity_threshold = activity_threshold,
                               BMD_resonse_threhold = BMD_resonse_threhold,
@@ -304,14 +306,23 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
     labels = labels[,1:(ncol(labels)-1)]
     colnames(labels) = label_leg
     
-    m = matrix(c(1:(nR*nC),rep((nR*nC)+1, nC)), nrow = nR + 1, ncol = nC, byrow = T)
-    graphics::layout(mat = m,heights = c(0.4,0.4,0.2))
+    if(length(length(meanXYZ)) < (nR*nC)){
+      m = matrix(1:(nR*nC), nrow = nR, ncol = nC, byrow = T)
+      increased = FALSE
+    }else{
+      m = matrix(c(1:(nR*nC),rep((nR*nC)+1, nC)), nrow = nR + 1, ncol = nC, byrow = T)
+      increased = TRUE
+    }
+    
+    par(oma = oma + 0.1,
+        mar = mar + 0.1)
+    graphics::layout(mat = m)
     
     for(i in 1:length(meanXYZ)){
       print(i)
       immy = meanXYZ[[i]][[3]]
-      coord = cbind(contour_res$RPGenes[[i]][[1]],contour_res$RPGenes[[geneName]][[2]])
-      res2 = compute_BMD_IC50(immy,coord, mainplots[[i]],
+      coord = cbind(meanXYZ[[i]][[1]],meanXYZ[[i]][[2]])
+      res2 = compute_BMD_IC50(immy,coord, strsplit(x = mainplots[[i]],split = " "),
                               activity_threshold = activity_threshold,
                               BMD_resonse_threhold = BMD_resonse_threhold,
                               mode = mode,
@@ -321,20 +332,37 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
     }
     
     
-    if(i<(nR*nC)){
-      plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-    }else{
-      plot(1, type = "n", axes=FALSE, xlab="", ylab="")
-      graphics::legend(x="center",
-                       c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "Dose-Response","IC50"),
-                       col =c(NA, NA,NA,"gold", "red"),
-                       lty = c(NA,NA,NA,1,1),
-                       fill = c("darkblue","darkgreen","brown",NA,NA),
-                       border = c("darkblue","darkgreen","brown",NA,NA),
-                       lwd = c(NA,NA,NA,3,3),
-                       xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
-      
-    }
+    plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    graphics::legend(x="top",
+                     c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "Dose-Response","IC50"),
+                     col =c(NA, NA,NA,"gold", "red"),
+                     lty = c(NA,NA,NA,1,1),
+                     fill = c("darkblue","darkgreen","brown",NA,NA),
+                     border = c("darkblue","darkgreen","brown",NA,NA),
+                     lwd = c(NA,NA,NA,3,3),
+                     xpd = NA, ncol = 1,box.lwd = 0,box.col = "white",bg = "white")
+    
+    
+    # if(i<(nR*nC)){
+    #   plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    #   graphics::legend(x="center",
+    #                    c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "Dose-Response","IC50"),
+    #                    col =c(NA, NA,NA,"gold", "red"),
+    #                    lty = c(NA,NA,NA,1,1),
+    #                    fill = c("darkblue","darkgreen","brown",NA,NA),
+    #                    border = c("darkblue","darkgreen","brown",NA,NA),
+    #                    lwd = c(NA,NA,NA,3,3),
+    #                    xpd = NA, ncol = 1,box.lwd = 0,box.col = "white",bg = "white")
+    #   
+    # }else{
+    #   while(i<(nR*nC)){
+    #     plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    #     i = i+1
+    #   }
+    # }
+    
+    
+
     
 }
 
