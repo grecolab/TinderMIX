@@ -23,7 +23,8 @@ Depends:
     org.Rn.eg.db,
     xlsx,
     pracma,
-    raster
+    raster,
+    wordcloud
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

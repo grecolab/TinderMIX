@@ -58,7 +58,7 @@ create_tic_tac_toe_wordcloud = function(Mat = res$Mat,max.words = 200,scale = c(
       d = data.frame(word = EP_all$Description, freq = log(EP_all$pValueAdj) * -2)
       
       # set.seed(1234)
-      wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
+      wordcloud::wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
                 max.words=max.words, random.order=random.order, 
                 colors=brewer.pal(8, "Dark2"), scale = scale)
       
