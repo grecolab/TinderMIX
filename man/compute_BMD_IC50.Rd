@@ -4,10 +4,12 @@
 \alias{compute_BMD_IC50}
 \title{This function identify the BMD area and the IC50 value in the time and dose maps}
 \usage{
-compute_BMD_IC50(immy, coord, geneName, activity_threshold = 0.58,
+compute_BMD_IC50(immy, coord, geneName, activity_threshold = 0.1,
   BMD_resonse_threhold = 0.95, nDoseInt = 3, nTimeInt = 3,
-  doseLabels = c("Low", "Mid", "High"), timeLabels = c("High", "Mid",
-  "Low"), tosave = FALSE, path = ".")
+  doseLabels = c("Late", "Middle", "Early"),
+  timeLabels = c("Sensitive", "Intermediate", "Resilient"),
+  toPlot = TRUE, addLegend = TRUE, tosave = FALSE, path = ".",
+  mode = "cumulative")
 }
 \arguments{
 \item{immy}{z-maps of the fitted 3D model, with doses on the columns and time points on the rows}
@@ -24,13 +26,19 @@ compute_BMD_IC50(immy, coord, geneName, activity_threshold = 0.58,
 
 \item{nTimeInt}{number of time related breaks in the gene label's table. default is 3}
 
-\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")}
+\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")}
 
-\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")}
+\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")}
+
+\item{toPlot}{it true the gene map is displayed}
+
+\item{addLegend}{if true the legend will be added to the plot}
 
 \item{tosave}{if true a png of the gene map is saved in path}
 
 \item{path}{path of the folder where to save the gene map}
+
+\item{mode}{is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.}
 }
 \value{
 an object of class TinderMIX containing the fitted BMD object, the IC50 value. The function plot the map showing the responsive region.

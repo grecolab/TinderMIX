@@ -37,7 +37,7 @@ fisher_test <- function(classes, clustering, matrixRownames, nCluster){
   CM_sup = ConfusionMatrix_gene
   colSums(CM_sup) -> elem_par_class
   
-  fisherTest <- matrix(0,nrow=10,ncol=4)
+  stats::fisherTest <- matrix(0,nrow=10,ncol=4)
   for(i in 1:nCluster){
     for(j in 1:nClass){
       cl1.test <- matrix(c(CM_sup[i,j],sum(CM_sup[i,-j]),elem_par_class[j],sum(elem_par_class[-j])),nrow=2,ncol=2,byrow=TRUE)

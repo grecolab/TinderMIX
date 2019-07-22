@@ -4,38 +4,41 @@
 \alias{label2DMap}
 \title{This function assigns a label to contour map}
 \usage{
-label2DMap(map, th = 0.95, nDoseInt = 3, nTimeInt = 3,
-  doseLabels = c("Low", "Mid", "High"), timeLabels = c("High", "Mid",
-  "Low"))
+label2DMap(map, coord, myContour, th = 0.95, mode = "cumulative",
+  nDoseInt = 3, nTimeInt = 3, doseLabels = c("Late", "Middle",
+  "Early"), timeLabels = c("Sensitive", "Intermediate", "Resilient"),
+  toplot = FALSE)
 }
 \arguments{
 \item{map}{matrix containing the z-map for a specific gene or cluster prototype}
 
+\item{coord}{matrix with x and y coordinate. The first column contain the doses, while the second one the time points}
+
+\item{myContour}{matrix with coordinate of bmd area border}
+
 \item{th}{a threshold to define the portion of dose-response area to be identified as labels for the gene.}
+
+\item{mode}{is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.}
 
 \item{nDoseInt}{number of dose related breaks in the gene label's table. default is 3}
 
 \item{nTimeInt}{number of time related breaks in the gene label's table. default is 3}
 
-\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")}
+\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")}
 
-\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")}
+\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")}
+
+\item{nDoseInt}{number of dose related breaks in the gene label's table. default is 3}
+
+\item{nTimeInt}{number of time related breaks in the gene label's table. default is 3}
+
+\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")}
+
+\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")}
 }
 \value{
 a list with 9x9 matrices specifying if the gene is active at low, mid or high time points and dose levels
 }
 \description{
 This function assigns a label to contour map
-}
-\examples{
-data("FC_WY14643")
-exp_data = fc_data
-pheno_data = pdata
-  PvalMat = compute_anova_dose_time(exp_data, pheno_data,dose_index = 2,time_point_index = 3)
-  ItemsList = build_items_list(PvalMat)
-  responsive_genes = unique(c(unlist(ItemsList$Dose),unlist(ItemsList$Time),unlist(ItemsList$`Dose:Time:DoseTime`),unlist(ItemsList$`Dose:Time`)))
-  contour_res = create_contour(exp_data, pheno_data, responsive_genes,dose_index = 2,time_point_index =3 ,gridSize = 50)
-  hls_res = hls_genes_clustering(contour_res$GenesMap,  nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
-  clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
-  create_tic_tac_toe(map = t(clpr$meanXYZ[[1]][[3]]))
 }

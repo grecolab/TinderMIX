@@ -4,13 +4,12 @@
 \alias{run_all_BMD_IC50}
 \title{This function run the compute_BMD_IC50 for all genes and return a matrix with label associated to every gene}
 \usage{
-run_all_BMD_IC50(contour_res, activity_threshold = 0.58,
+run_all_BMD_IC50(contour_res, activity_threshold = 0.1,
   BMD_resonse_threhold = 0.95, nDoseInt = 3, nTimeInt = 3,
-  doseLabels = c("Low", "Mid", "High"), timeLabels = c("High", "Mid",
-  "Low"), tosave = FALSE, path = ".", relGenes,
-  label_leg = c("Sensitive-High", "Sensitive-Mid", "Sensitive-Low",
-  "Intermediate-High", "Intermediate-Mid", "Intermediate-Low",
-  "Resilient-High", "Resilient-Mid", "Resilient-Low"))
+  doseLabels = c("Late", "Middle", "Early"),
+  timeLabels = c("Sensitive", "Intermediate", "Resilient"),
+  tosave = FALSE, toPlot = FALSE, addLegend = FALSE, path = ".",
+  relGenes, mode = "cumulative")
 }
 \arguments{
 \item{contour_res}{object resulting from the create_contour function}
@@ -23,15 +22,17 @@ run_all_BMD_IC50(contour_res, activity_threshold = 0.58,
 
 \item{nTimeInt}{number of time related breaks in the gene label's table. default is 3}
 
-\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")}
+\item{doseLabels}{vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")}
 
-\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")}
+\item{timeLabels}{vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")}
 
 \item{tosave}{if true a png of the gene map is saved in path}
 
 \item{path}{path of the folder where to save the gene map}
 
 \item{relGenes}{vector of genes with signifincant pvalues from the fitting}
+
+\item{mode}{is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.}
 
 \item{coord}{matrix with x and y coordinate. The first column contain the doses, while the second one the time points}
 

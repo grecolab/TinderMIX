@@ -22,7 +22,8 @@ Depends:
     org.Mm.eg.db, 
     org.Rn.eg.db,
     xlsx,
-    pracma
+    pracma,
+    raster
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

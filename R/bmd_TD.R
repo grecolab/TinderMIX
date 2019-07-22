@@ -5,13 +5,20 @@
 #' @param th a threshold to define the portion of dose-response area to be identified as labels for the gene.
 #' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
 #' @param nTimeInt number of time related breaks in the gene label's table. default is 3
-#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")
-#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")
+#' @param mode is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.
+#' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
+#' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
+#' @param nTimeInt number of time related breaks in the gene label's table. default is 3
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")
+#' @param myContour matrix with coordinate of bmd area border
 #' @return a list with 9x9 matrices specifying if the gene is active at low, mid or high time points and dose levels
 #'
 #' @export
 #'
-label2DMap = function(map, th=0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low","Mid","High"), timeLabels = c("High","Mid","Low")){
+label2DMap = function(map, coord, myContour, th=0.95, mode = "cumulative", nDoseInt=3, nTimeInt=3, doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"), toplot = FALSE){
   mapSize = ncol(map)
   rangesDoses = cut(seq(5, 20, length.out=mapSize),nDoseInt)
   rangesTimes = cut(seq(5, 20, length.out=mapSize),nTimeInt)
@@ -19,11 +26,23 @@ label2DMap = function(map, th=0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low"
   idsDoses = list()
   for(i in 1:nDoseInt){
     idsDoses[[i]] = which(rangesDoses==levels(rangesDoses)[i])
+    if(toplot){
+      graphics::abline(v = coord[idsDoses[[i]],1][length(idsDoses[[i]])], lty = 2)
+    }
   }
   
   idsTimes = list()
   for(i in 1:nTimeInt){
     idsTimes[[i]] = which(rangesTimes==levels(rangesTimes)[i])
+    if(toplot){
+      graphics::abline(h = coord[idsTimes[[i]],2][length(idsTimes[[i]])], lty = 2)
+    }
+    
+  }
+  
+  CM = matrix(0,mapSize,mapSize)
+  for(i in 1:nrow(myContour)){
+    CM[myContour[i,1], myContour[i,2]] = 1
   }
   
   
@@ -31,38 +50,112 @@ label2DMap = function(map, th=0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low"
   ttt = matrix(0, nrow = nTimeInt,ncol = nDoseInt)
   rownames(ttt) = timeLabels
   colnames(ttt) = doseLabels
-  for(i in nTimeInt:1){
+  for(i in 1:nTimeInt){
     for(j in 1:nDoseInt){
-      ttt[i,j] = mean(mean(map[idsTimes[[i]],idsDoses[[j]]]))
+      
+      blockMat = matrix(0,mapSize,mapSize)
+      blockMat[idsTimes[[i]],idsDoses[[j]]]=1
+      
+      ttt[i,j] = sum(blockMat * CM)/nrow(myContour)
     }
   }
   
-  qq = quantile(ttt)
-  
-  if(abs(qq[5]) >= abs(qq[1])){
-    qq1 = quantile(ttt, th)
-    
-    if(qq1>0){
-      ttt_lab = ttt>=qq1
-    }else{
-      ttt_lab = ttt>=quantile(ttt,1)
+  if(mode == "cumulative"){
+    ttt2 = ttt
+    ttt_lab = ttt * 0
+    cumulativa = 0
+    while(cumulativa<th){
+      idx = which(ttt2==max(ttt2), arr.ind = T)[1,]
+      ttt_lab[idx[1], idx[2]] = TRUE
+      cumulativa = cumulativa + ttt[idx[1], idx[2]]
+      ttt2[idx[1], idx[2]]=0
     }
   }else{
-    qq1 = quantile(ttt, 1-th)
-    
-    if(qq1>0){
-      ttt_lab= ttt<=qq1
-    }else{
-      ttt_lab= ttt<=quantile(ttt,0)
-    }
+    ttt_lab = 0 * ttt
+    ttt_lab[ttt>0] = 1
   }
   
-  ttt = ttt
+  
+  # qq = quantile(ttt)
+  # 
+  # if(abs(qq[5]) >= abs(qq[1])){
+  #   qq1 = quantile(ttt, th)
+  #   
+  #   if(qq1>0){
+  #     ttt_lab = ttt>=qq1
+  #   }else{
+  #     ttt_lab = ttt>=quantile(ttt,1)
+  #   }
+  # }else{
+  #   qq1 = quantile(ttt, 1-th)
+  #   
+  #   if(qq1>0){
+  #     ttt_lab= ttt<=qq1
+  #   }else{
+  #     ttt_lab= ttt<=quantile(ttt,0)
+  #   }
+  # }
+  # 
+  # ttt = ttt
   
   return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
   
 }
 
+#   based on how many 1 I have in the tic-tac-toe blocks. the 1 are the BMD area.
+#
+#
+# label2DMap = function(map, th=0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low","Mid","High"), timeLabels = c("High","Mid","Low")){
+#   mapSize = ncol(map)
+#   rangesDoses = cut(seq(5, 20, length.out=mapSize),nDoseInt)
+#   rangesTimes = cut(seq(5, 20, length.out=mapSize),nTimeInt)
+#   
+#   idsDoses = list()
+#   for(i in 1:nDoseInt){
+#     idsDoses[[i]] = which(rangesDoses==levels(rangesDoses)[i])
+#   }
+#   
+#   idsTimes = list()
+#   for(i in 1:nTimeInt){
+#     idsTimes[[i]] = which(rangesTimes==levels(rangesTimes)[i])
+#   }
+#   
+#   
+#   #ttt is a 3x3 matrix, with low-mid-high on the column and high-mid-low on the rows.
+#   ttt = matrix(0, nrow = nTimeInt,ncol = nDoseInt)
+#   rownames(ttt) = timeLabels
+#   colnames(ttt) = doseLabels
+#   for(i in nTimeInt:1){
+#     for(j in 1:nDoseInt){
+#       ttt[i,j] = mean(mean(map[idsTimes[[i]],idsDoses[[j]]]))
+#     }
+#   }
+#   
+#   qq = quantile(ttt)
+#   
+#   if(abs(qq[5]) >= abs(qq[1])){
+#     qq1 = quantile(ttt, th)
+#     
+#     if(qq1>0){
+#       ttt_lab = ttt>=qq1
+#     }else{
+#       ttt_lab = ttt>=quantile(ttt,1)
+#     }
+#   }else{
+#     qq1 = quantile(ttt, 1-th)
+#     
+#     if(qq1>0){
+#       ttt_lab= ttt<=qq1
+#     }else{
+#       ttt_lab= ttt<=quantile(ttt,0)
+#     }
+#   }
+#   
+#   ttt = ttt
+#   
+#   return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
+#   
+# }
 
 bwtraceboundary= function(ternaryIMBMD){
   diffMat = 0 * ternaryIMBMD
@@ -78,31 +171,8 @@ bwtraceboundary= function(ternaryIMBMD){
     diffMat[idx[length(idx)],i] = 1
   }
   
-  #image(diffMat)
-  
   image_border = which(diffMat==1,arr.ind = 1)
   return(list(diffMat=diffMat,image_border=image_border))
-}
-
-optimal_fitting_by_r2 = function(doses, times){
-  n = 1:4
-  modelList = list()
-  adjustedR2List = c()
-  for(i in n){
-    model=lm( bquote( times ~ poly(doses,.(i)) ), data=data.frame(doses=doses, times = times)) 
-    
-    # model <- lm(times ~ poly(doses,i))
-    sm = summary(model)
-    modelList[[i]] = model
-    adjustedR2List = c(adjustedR2List,sm$adj.r.squared)
-  }
-  
-  optIdx = which.max(adjustedR2List)
-  fit = modelList[[optIdx]]
-  data = data.frame(doses,times)
-  
-  return(list(optMod = fit, optr2 = adjustedR2List[optIdx], data = data,i=optIdx))
-  
 }
 
 rotate <- function(x) t(apply(x, 2, rev))
@@ -119,25 +189,29 @@ rotate <- function(x) t(apply(x, 2, rev))
 #' @param BMD_resonse_threhold a threshold to define the portion of dose-response area to be identified as labels for the gene.
 #' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
 #' @param nTimeInt number of time related breaks in the gene label's table. default is 3
-#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")
-#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")
 #' @param tosave if true a png of the gene map is saved in path
 #' @param path path of the folder where to save the gene map
 #' @param relGenes vector of genes with signifincant pvalues from the fitting
+#' @param mode is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.
 #' @return a list with two object: Mat is a matrix with genes on the rows and labels on the columns. GeneRes is a list of results from the compute_BMD_IC50 function, one for every gene
 #'
 #' @export
 #'
 
-run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.58, BMD_resonse_threhold = 0.95, 
+run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_resonse_threhold = 0.95, 
                             nDoseInt=3, nTimeInt=3, 
-                            doseLabels = c("Low","Mid","High"), 
-                            timeLabels = c("High","Mid","Low"), 
-                            tosave=FALSE, path = ".",
-                            relGenes,
-                            label_leg = c("Sensitive-High","Sensitive-Mid","Sensitive-Low", 
-                                          "Intermediate-High","Intermediate-Mid","Intermediate-Low",
-                                          "Resilient-High","Resilient-Mid","Resilient-Low")){
+                            doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"),
+                            tosave=FALSE, toPlot = FALSE, addLegend = FALSE, path = ".",
+                            relGenes, mode = "cumulative"){
+  label_leg = c()
+  for(i in doseLabels){
+    for(j in timeLabels){
+      label_leg = c(label_leg, paste(i,j,sep="-"))
+    }
+  }
+  
   Map = list()
   goodGenes = c()
   GeneRes = list()
@@ -146,14 +220,14 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.58, BMD_resonse_t
   for(i in 1:length(contour_res$RPGenes)){
     geneName = names(contour_res$RPGenes)[i]
     
-    if((geneName %in% ggenes)==FALSE)
+    if((geneName %in% relGenes)==FALSE)
       next
     
     immy = contour_res$RPGenes[[geneName]][[3]]
     coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
     tryCatch({
       res = compute_BMD_IC50(immy,coord, geneName,activity_threshold = activity_threshold,BMD_resonse_threhold=BMD_resonse_threhold,
-                             nDoseInt=nDoseInt,nTimeInt=nTimeInt,doseLabels=doseLabels,timeLabels=timeLabels,tosave = tosave,path = path)
+                             nDoseInt=nDoseInt,nTimeInt=nTimeInt,doseLabels=doseLabels,timeLabels=timeLabels,tosave = tosave,path = path, toPlot = toPlot, addLegend = addLegend,mode=mode)
       GeneRes[[geneName]] = res
       if(is.null(res$verso)==FALSE){
         labels =  as.vector(res$label$ttt_label)
@@ -174,8 +248,8 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.58, BMD_resonse_t
     Mat[i,] = Mat[i,]* verso[i]
   }
 
-  #MMA = cbind(Mat, rowSums(abs(Mat)))
-  return(list(Mat=Mat,GeneRes=GeneRes))
+  MMA = cbind(Mat, rowSums(abs(Mat)))
+  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes))
 }
 
 
@@ -183,6 +257,8 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.58, BMD_resonse_t
 #' This function identify the BMD area and the IC50 value in the time and dose maps 
 #'
 #' @importFrom pracma gradient
+#' @importFrom pracma meshgrid
+#' @importFrom raster contour
 #'
 #' @param immy z-maps of the fitted 3D model, with doses on the columns and time points on the rows
 #' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
@@ -191,50 +267,56 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.58, BMD_resonse_t
 #' @param BMD_resonse_threhold a threshold to define the portion of dose-response area to be identified as labels for the gene.
 #' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
 #' @param nTimeInt number of time related breaks in the gene label's table. default is 3
-#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Low","Mid","High")
-#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("High","Mid","Low")
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")
+#' @param toPlot it true the gene map is displayed
+#' @param addLegend if true the legend will be added to the plot
 #' @param tosave if true a png of the gene map is saved in path
 #' @param path path of the folder where to save the gene map
+#' @param mode is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.
 #' @return an object of class TinderMIX containing the fitted BMD object, the IC50 value. The function plot the map showing the responsive region.
 #'
 #' @export
 #'
 
-compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_resonse_threhold = 0.95, nDoseInt=3, nTimeInt=3, doseLabels = c("Low","Mid","High"), timeLabels = c("High","Mid","Low"), tosave=FALSE, path = "."){
-  
-  # dosesSTDEpsLeft = 1e-10
-  # dosesSTDEpsSouth = 1e-10
-  # flagVerticalBMD = 0
-  
+compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_resonse_threhold = 0.95, nDoseInt=3, nTimeInt=3, 
+                            doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"), toPlot = TRUE,addLegend = TRUE, tosave=FALSE, path = ".", mode = "cumulative"){
+  gridSize = nrow(immy)
   immy = rotate(rotate(rotate(immy)))
-
+  
+  activity_threshold = log2((10 + (10*activity_threshold))/10)
+  
+  #activity_threshold = quantile(immy, activity_threshold)
+  
   if(max(abs(immy))<activity_threshold){
     print("No DE gene")
     return(1)
   }
   
   binaryIMBMD = immy
-  binaryIMBMD[abs(binaryIMBMD)>=activity_threshold]=1; # eligible region
-  binaryIMBMD[abs(binaryIMBMD)<activity_threshold]=0; # non-eligible region
+  elig = which((abs(binaryIMBMD)<activity_threshold)==TRUE)
+  nonelig = which((abs(binaryIMBMD)<activity_threshold)==FALSE)
   
-  #image(rotate(binaryIMBMD)) # this image shows the eligible and non eligible region
-  gg = gradient(immy,coord[,1], coord[,2])
+  binaryIMBMD[elig]=0; # non-eligible region
+  binaryIMBMD[nonelig]=1; # eligible region
+  
+  gg = pracma::gradient(immy,coord[,1], coord[,2])
   gx = gg$X
   gy = gg$Y
-  X <- meshgrid(coord[,1],coord[,1])$X
-  Y <- meshgrid(coord[,2],coord[,2])$Y
+  X <- pracma::meshgrid(coord[,1],coord[,1])$X
+  Y <- pracma::meshgrid(coord[,2],coord[,2])$Y
   
   #IDENTIFY BMD REGION
-  if(sum(abs(binaryIMBMD) < activity_threshold) == 0){  # % if non-eligible region in empty
+  if(sum(abs(immy) < activity_threshold) == 0){  # % if non-eligible region in empty
     ternaryIMBMD = 0 * immy;
     ternaryIMBMD[abs(immy) >= activity_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
     ternaryIMBMD[abs(immy) >= activity_threshold & gx<0]=2; #% YELLOW: gradient component in dose direction negative, i.e. dose decreases
     #image(ternaryIMBMD)
   }else{
-    ternaryIMBMD = immy;
-    ternaryIMBMD[abs(ternaryIMBMD)>=activity_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
-    ternaryIMBMD[abs(ternaryIMBMD)>=activity_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
-    ternaryIMBMD[abs(ternaryIMBMD)<activity_threshold]=0; # BLUE: again non-eligible region
+    ternaryIMBMD = 0 * immy;
+    ternaryIMBMD[abs(immy)>=activity_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
+    ternaryIMBMD[abs(immy)>=activity_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
+    ternaryIMBMD[abs(immy)<activity_threshold]=0; # BLUE: again non-eligible region
      #image(coord[,1], coord[,2],rotate(ternaryIMBMD))
     # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
@@ -248,8 +330,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
   pixelsYellow =sum(ternaryIMBMD==2);
   
   #how many pixel do the yellow and green area have on the biggest dose
-  n50Green = sum(ternaryIMBMD[,50]==1)
-  n50Yellow=sum(ternaryIMBMD[,50]==2)
+  n50Green = sum(ternaryIMBMD[,gridSize]==1)
+  n50Yellow=sum(ternaryIMBMD[,gridSize]==2)
   
   tabG = table(which(ternaryIMBMD==1,arr.ind = T)[,2])
   tabY = table(which(ternaryIMBMD==2,arr.ind = T)[,2])
@@ -308,7 +390,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
     if(nOnes>0){
       numbers = which(ternaryIMBMD[i,]==1)
       n = min(numbers)
-      if(abs(sum(numbers - n:50))>0){
+      if(abs(sum(numbers - n:gridSize))>0){
         toSetAsZero=c(toSetAsZero, i)
       }
     }
@@ -323,12 +405,11 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
     return(2)
   }
   
-  #res = create_tic_tac_toe(map = apply(ternaryIMBMD, 2, rev), verso)
   res = bwtraceboundary(ternaryIMBMD = ternaryIMBMD)
   myContour = res$image_border
   
   goodPoints = c() #sono i punti esterni alla regione individuata, ovvero il primo punto per ogni riga
-  for(i in 1:50){
+  for(i in 1:gridSize){
     it = which(myContour[,1]==i) #riga
     id = min(myContour[it,2]) # colonna
     goodPoints = c(goodPoints,which(myContour[,1]==i & myContour[,2]==id))
@@ -353,21 +434,26 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
     myContour = myContour[-goodIdx,]
   }
   
+  
+  if(toPlot){
   if(tosave){
-    png(filename = paste(path, geneName, ".png", sep=""))
+    grDevices::png(filename = paste(path, geneName, ".png", sep=""))
   }
-  image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
+  graphics::image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
-  legend(grconvertX(30, "device"), grconvertY(1, "device"),
-         c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "BMD","IC50"),
-         col =c(NA, NA,NA,"gold", "red"),
-         lty = c(NA,NA,NA,1,1),
-         fill = c("darkblue","darkgreen","brown",NA,NA),
-         border = c("darkblue","darkgreen","brown",NA,NA),
-         lwd = c(NA,NA,NA,3,3),
-         xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
+  if(addLegend){
+    graphics::legend(graphics::grconvertX(30, "device"), graphics::grconvertY(1, "device"),
+           c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "Dose-Response","IC50"),
+           col =c(NA, NA,NA,"gold", "red"),
+           lty = c(NA,NA,NA,1,1),
+           fill = c("darkblue","darkgreen","brown",NA,NA),
+           border = c("darkblue","darkgreen","brown",NA,NA),
+           lwd = c(NA,NA,NA,3,3),
+           xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
+  }
+
   
-  
+  }
   if(sum(ternaryIMBMD)==0){
     print("No dose response gene")
     ans = list()
@@ -381,21 +467,27 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
     ans$bmd = NULL
     ans$IC50 = NULL
     class(ans) = 'TinderMIX'
-    if(tosave) dev.off()
+    if(toPlot){
+      if(tosave) grDevices::dev.off()
+    }
     return(ans)
   }
   
-  restt0 = label2DMap(map = ternaryIMBMD)
+  restt0 = label2DMap(map = ternaryIMBMD,coord=coord,myContour = myContour,th = BMD_resonse_threhold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
   
   BMD = ternaryIMBMD
   BMD[BMD==0] = NA
-  image(coord[,1], coord[,2],rotate(BMD), col = adjustcolor( "yellow", alpha.f = 0.2), add = T)
+  if(toPlot){
+    graphics::image(coord[,1], coord[,2],rotate(BMD), col = grDevices::adjustcolor( "yellow", alpha.f = 0.2), add = T)
+  }
   
-  #image(coord[,1], coord[,2], rotate(ternaryIMBMD), col = c("darkblue","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
-  ddd = cbind(coord[myContour[,2],1],coord[51-myContour[,1],2])
+  ddd = cbind(coord[myContour[,2],1],coord[(gridSize + 1)-myContour[,1],2])
   colnames(ddd) = c("Dose","Time")
-  lines(ddd, col = "gold", lwd = 4, pch=16)
-  points(ddd, col = "gold", lwd = 4, pch=16)
+  
+  if(toPlot){
+    graphics::lines(ddd, col = "gold", lwd = 4, pch=16)
+    graphics::points(ddd, col = "gold", lwd = 4, pch=16)
+  }
   
   IC50 = c()
   for(i in 1:nrow(immy)){
@@ -417,13 +509,16 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
   
   IC50 = IC50[myContour[,1]]
   
-  ddd2= cbind(coord[IC50,1],coord[51-myContour[,1],2])
+  ddd2= cbind(coord[IC50,1],coord[(gridSize + 1)-myContour[,1],2])
   colnames(ddd2) = c("Dose","Time")
   
-  lines(ddd2,col = "red", lwd = 4)
-  points(ddd2,col = "red", pch = 16)
-  if(tosave) dev.off()
-  
+  if(toPlot){
+    graphics::lines(ddd2,col = "red", lwd = 4)
+    graphics::points(ddd2,col = "red", pch = 16)
+    if(tosave) grDevices::dev.off()
+    
+  }
+
   ans = list()
   ans$immy = immy
   ans$activity_threshold = activity_threshold
@@ -752,3 +847,24 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.58, BMD_
 #   return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
 #   
 # } 
+
+
+# optimal_fitting_by_r2 = function(doses, times){
+#   n = 1:4
+#   modelList = list()
+#   adjustedR2List = c()
+#   for(i in n){
+#     model=lm( bquote( times ~ poly(doses,.(i)) ), data=data.frame(doses=doses, times = times)) 
+#     
+#     sm = summary(model)
+#     modelList[[i]] = model
+#     adjustedR2List = c(adjustedR2List,sm$adj.r.squared)
+#   }
+#   
+#   optIdx = which.max(adjustedR2List)
+#   fit = modelList[[optIdx]]
+#   data = data.frame(doses,times)
+#   
+#   return(list(optMod = fit, optr2 = adjustedR2List[optIdx], data = data,i=optIdx))
+#   
+# }
