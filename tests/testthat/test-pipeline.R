@@ -1,8 +1,7 @@
 context("test-pipeline")
 
 test_that("pipeline works", {
-  library(TinderMIX)
-
+  
   data("FC_WY14643")
   exp_data = fc_data#WY14643$exp_data
   pheno_data = pdata#WY14643$pheno_data
@@ -59,7 +58,9 @@ test_that("pipeline works", {
                                                 responsive_genes,
                                                 dose_index = dose_index,
                                                 time_point_index =time_point_index ,
-                                                gridSize = gridSize,pvalFitting.adj.method=pvalFitting.adj.method))
+                                                gridSize = gridSize,
+                                                pvalFitting = pvalFitting,
+                                                pvalFitting.adj.method=pvalFitting.adj.method))
 
   ggenes = contour_res$ggenes
   
@@ -85,13 +86,25 @@ test_that("pipeline works", {
                          tosave=FALSE, addLegend = FALSE, path = ".",
                          relGenes = ggenes, toPlot = FALSE)
   
-  print("Step 4: Performing clustering")
+  print("Step 4: Performing clustering based on gene maps")
   hls_res = hls_genes_clustering(contour_res$GenesMap[,rownames(res$Mat)],  nClust = nClust, method=method, hls.method = hls.method)
 
-  print("Step 5: Creating prototypes")
-  clpr = create_prototypes(clust_res = hls_res,summaryMat = hls_res$summaryMat,contour_res )
+  print("Step 5: Identify optimal clustering and creating prototypes")
+  pr = hls_res$hls_res[[which.max(hls_res$summaryMat[,5])]]
+  optcl =pr$clusters
+  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
 
+  print("Step 4bis: performing clustering based on gene labels")
+  hls_res = hls_labelbased_clustering(GenesMap=res$Mat, nClust = c(5,10,25,50,75,100,125,150,175,200,250,300), method="pearson", hls.method = "ward")
+  
+  print("Step 5: Identify optimal clustering and creating prototypes")
+  pr = hls_res$hls_res[[which.max(summaryMat[,5])]]
+  optcl =pr$clusters
+  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
+  
+  
   print("Step 6: print clustering prototype and identify cluster labels")
+  #plot_clusters_prototypes(meanXYZ=clpr$meanXYZ)
   
   labels = plot_clusters_prototypes(meanXYZ=clpr$meanXYZ, nR = 2, nC = 5,
                                       activity_threshold = activity_threshold,

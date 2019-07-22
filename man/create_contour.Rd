@@ -5,7 +5,8 @@
 \title{This function fits a 3D regression model for every gene in the dataset and creates an N x N contour plot}
 \usage{
 create_contour(exp_data, pheno_data, responsive_genes, dose_index,
-  time_point_index, gridSize = 50)
+  time_point_index, gridSize = 50, pvalFitting.adj.method = "fdr",
+  pvalFitting = 0.05)
 }
 \arguments{
 \item{exp_data}{is the expression matrix with genes on the rows and samples on the columns}

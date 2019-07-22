@@ -21,7 +21,7 @@
 
 #modelType string showing the model to fit. Possible options: poly2 and loess 
 
-create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50){ #modelType = "poly2
+create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50, pvalFitting.adj.method = "fdr",pvalFitting=0.05){ 
   GenesMap = matrix(NA, ncol = length(responsive_genes), nrow = (gridSize*gridSize) )
   colnames(GenesMap) = responsive_genes
   RPGenes = list()
@@ -76,8 +76,13 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
   }
   colnames(GenesMap) = responsive_genes#responsive_genes
   close(pb)
+  
+  SST = Stats
+  adj.pval = p.adjust(SST[,1],method = pvalFitting.adj.method)
+  SST = cbind(adj.pval,SST)
+  ggenes = rownames(SST)[SST[,1]<pvalFitting]
 
-  return(list(GenesMap=GenesMap, RPGenes = RPGenes,Stats=Stats,DFList=DFList))
+  return(list(GenesMap=GenesMap, RPGenes = RPGenes,Stats=Stats,DFList=DFList,ggenes=ggenes))
 }
 
 #'

@@ -4,14 +4,14 @@
 \alias{create_prototypes}
 \title{this function create the cluster prototypes as the mean values of the z maps of all the genes in the cluster}
 \usage{
-create_prototypes(clust_res, summaryMat, contour_res)
+create_prototypes(clust_res, contour_res, optcl)
 }
 \arguments{
 \item{clust_res}{the clustering results object given in input by the function hls_genes_clustering}
 
-\item{summaryMat}{the matrix with the summary statistics computed for the different k values}
-
 \item{contour_res}{a list with the contours object returned in output by the create_contour function}
+
+\item{summaryMat}{the matrix with the summary statistics computed for the different k values}
 }
 \value{
 a list with the contour objects for each clustering prototype and the vector of the optimal clustering

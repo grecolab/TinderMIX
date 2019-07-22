@@ -4,7 +4,11 @@
 \alias{plot_clusters_prototypes}
 \title{this function plots the clusters prototype}
 \usage{
-plot_clusters_prototypes(meanXYZ, nR = 2, contour_size = 0.05)
+plot_clusters_prototypes(meanXYZ, nR = 2, nC = 5,
+  activity_threshold = activity_threshold,
+  BMD_resonse_threhold = BMD_resonse_threhold, nDoseInt = nDoseInt,
+  nTimeInt = nTimeInt, doseLabels = doseLabels,
+  timeLabels = timeLabels)
 }
 \arguments{
 \item{meanXYZ}{a list the contour object for each prototype computed with the function create_prototypes}

@@ -43,6 +43,52 @@ hls_genes_clustering = function(GenesMap, nClust = c(5,10,25,50,75,100,125,150,1
   return(list(hls_res = hls_res, summaryMat=summaryMat,clusterList=clusterList))
 }
 
+
+#'
+#' It clusters the genes by their activity labels. It also estimate the ideal number of clusters
+#' @importFrom stats cor lm hclust as.dist
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @param GenesMap a matrix with the genes on the rows and the labels on the columns. The matrix contains 1, -1 or 0 if the gene has a label with an increasing or decreasing FC with respect to doses or no labels (0) 
+#' @param nClust vector of putative numbers used to determine number of clusters. Default = c(5,10,25,50,75,100,125,150,175,200,250,300)
+#' @param method string specifying the correlation method. Default = "pearson"
+#' @param hls.method string specifying method for the hierarchical clustering. Default = "ward"
+#' @return a list with the clustering results and statistics for the optimal number of clusters
+#' \item{hls_res}{a list containing the clustering results, the clustering vector and the centers for each k value given in input}
+#' \item{summaryMat}{a matrix with summary statistic for each k value given in input}
+#' \item{clusterList}{a list with the clustering vectors}
+#'
+#' @export
+#'
+hls_labelbased_clustering = function(GenesMap, nClust = c(5,10,25,50,75,100,125,150,175,200,250,300), method="pearson", hls.method = "ward"){
+  GenesMap = t(GenesMap)
+  DB.diss <- 1-stats::cor(x=GenesMap,method = method)
+  DD = stats::as.dist(DB.diss)
+  
+  hls_res  = list()
+  index = 1
+  summaryMat = c()
+  clusterList = list()
+  pb = txtProgressBar(min=0, max = length(nClust), style = 3)
+  
+  for(k in nClust){
+    print(k)
+    hls = stats::hclust(DD, method = hls.method)
+    clusters = stats::cutree(hls,k = k)
+    
+    summaryMat = rbind(summaryMat,clustering_summary(DB = t(GenesMap),cluster = clusters))
+    centers = findCenter(DB = t(GenesMap), clust_vector = clusters)
+    
+    hls_res[[index]] = list(hls = hls, clusters = clusters, centers = centers)
+    clusterList[[index]] = clusters
+    
+    index = index + 1
+    setTxtProgressBar(pb,index)
+  }
+  close(pb)
+  
+  return(list(hls_res = hls_res, summaryMat=summaryMat,clusterList=clusterList))
+}
+
 #'
 #' This function evaluate the summary index for a clustering results by taking into account the within and between variability
 #' @importFrom stats cor
@@ -124,15 +170,14 @@ findCenter <- function(DB,clust_vector){
 #' @export
 #'
 
-create_prototypes = function(clust_res,summaryMat,contour_res ){
+create_prototypes = function(clust_res,contour_res, optcl ){ #summaryMat
   RPGenes = contour_res$RPGenes
   x = RPGenes[[1]][[1]]
   y = RPGenes[[1]][[2]]
   z = RPGenes[[1]][[3]]
 
-  pr = clust_res$hls_res[[which.max(summaryMat[,5])]]
-
-  optcl =pr$clusters
+  # pr = clust_res$hls_res[[which.max(summaryMat[,5])]]
+  # optcl =pr$clusters
   meanXYZ = list()
   geneCluster = list()
   for(i in unique(optcl)){
@@ -167,36 +212,68 @@ create_prototypes = function(clust_res,summaryMat,contour_res ){
 #' @export
 #'
 
-plot_clusters_prototypes = function(meanXYZ, nR = 2, contour_size=0.05){
+plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
+                                    activity_threshold = activity_threshold,
+                                    BMD_resonse_threhold = BMD_resonse_threhold,
+                                    nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
+                                    doseLabels = doseLabels, 
+                                    timeLabels = timeLabels){
   
-  min_th = 100
-  max_th = -100
-  
-  for(i in 1:length(meanXYZ)){
-    mi = min(meanXYZ[[i]][[3]])
-    mix = max(meanXYZ[[i]][[3]])
-    if(mi<min_th){
-      min_th = mi
-    }
-    if(mix>max_th){
-      max_th = mix
-    }
-  }
-  
-  PL = list()
-  for(i in 1:length(meanXYZ)){
-    PL[[i]] <- plotly::plot_ly(x = meanXYZ[[i]][[1]], 
-                               y = meanXYZ[[i]][[2]], 
-                               z = t(meanXYZ[[i]][[3]]), 
-                               type = "contour", 
-                               autocontour = F,
-                               contours = list(
-                                 start = min_th,
-                                 end = max_th,
-                                 size = contour_size
-                               )) 
-  }
-  p = plotly::subplot(PL,nrows = nR)
-  print(p)
 
+    labels = c()
+    for(i in 1:length(meanXYZ)){
+      print(i)
+      immy = contour_res$RPGenes[[i]][[3]]
+      coord = cbind(contour_res$RPGenes[[i]][[1]],contour_res$RPGenes[[geneName]][[2]])
+      res2 = compute_BMD_IC50(immy,coord, i,
+                              activity_threshold = activity_threshold,
+                              BMD_resonse_threhold = BMD_resonse_threhold,
+                              mode = mode,
+                              nTimeInt = nTimeInt,nDoseInt=nDoseInt,
+                              timeLabels = timeLabels,
+                              doseLabels = doseLabels, toPlot = FALSE, tosave = FALSE)
+      
+      if(is.null(res2$label)){
+        labels = rbind(labels, c(rep(0, nDoseInt*nTimeInt),0))
+      }else{
+        labels = rbind(labels, c(as.vector(res2$label$ttt_label),res2$verso))
+        
+      }
+      
+    }
 }
+
+
+# plot_clusters_prototypes = function(meanXYZ, nR = 2, contour_size=0.05){
+#   
+#   min_th = 100
+#   max_th = -100
+#   
+#   for(i in 1:length(meanXYZ)){
+#     mi = min(meanXYZ[[i]][[3]])
+#     mix = max(meanXYZ[[i]][[3]])
+#     if(mi<min_th){
+#       min_th = mi
+#     }
+#     if(mix>max_th){
+#       max_th = mix
+#     }
+#   }
+#   
+#   PL = list()
+#   for(i in 1:length(meanXYZ)){
+#     PL[[i]] <- plotly::plot_ly(x = meanXYZ[[i]][[1]], 
+#                                y = meanXYZ[[i]][[2]], 
+#                                z = t(meanXYZ[[i]][[3]]), 
+#                                type = "contour", 
+#                                autocontour = F,
+#                                contours = list(
+#                                  start = min_th,
+#                                  end = max_th,
+#                                  size = contour_size
+#                                )) 
+#   }
+#   p = plotly::subplot(PL,nrows = nR)
+#   print(p)
+# 
+# }
