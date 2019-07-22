@@ -85,6 +85,22 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
   return(list(GenesMap=GenesMap, RPGenes = RPGenes,Stats=Stats,DFList=DFList,ggenes=ggenes))
 }
 
+plot_contour_plot = function(immy, coord,geneName){
+  # geneName = "Hspbp1" #"Acmsd
+  # immy = contour_res$RPGenes[[geneName]][[3]]
+  # 
+  # immy2 = clpr[[1]][[3]]
+  # coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
+  
+  res2 = compute_BMD_IC50(immy,coord, geneName,
+                          activity_threshold = activity_threshold,
+                          BMD_resonse_threhold = BMD_resonse_threhold,
+                          mode = mode,
+                          nTimeInt = nTimeInt,nDoseInt=nDoseInt,
+                          timeLabels = timeLabels,
+                          doseLabels = doseLabels, toPlot = TRUE, tosave = FALSE)
+}
+
 #'
 #'This function plots the fitted 3d surface for the expression value of a gene
 #'

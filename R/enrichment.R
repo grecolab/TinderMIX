@@ -1,3 +1,52 @@
+create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contour_res = contour_res, mode = "mean", allPath = FALSE){
+ # diss.cor <-1- abs(stats::cor(contour_res$GenesMap,method="pearson"))
+  rownames(enrichedPath) = enrichedPath[,"annID"]
+  RPGenes = contour_res$RPGenes
+  names(RPGenes) = toupper(names(RPGenes))
+  GenesMap = contour_res$GenesMap
+  colnames(GenesMap) = toupper(colnames(GenesMap))
+  
+  Pathways_prot = list()
+  
+  for(i in 1:length(annIDs)){
+    
+    print(paste(i,"/", length(annIDs)))
+    
+    genes = unlist(strsplit(x = enrichedPath[annIDs[i],2],split = ","))
+    pt = create_prot(RPGenes = RPGenes, genes=genes)
+    cor_pt = mean(abs(stats::cor(GenesMap[,genes],method="pearson")))
+    randomCor = c()
+    pb = txtProgressBar(min = 1, max = 100, style = 3)
+    for(permIdx in 1:100){
+      randomCor = c(randomCor, mean(abs(stats::cor(GenesMap[,sample(x = 1:ncol(GenesMap),size = length(genes))],method="pearson"))))
+      setTxtProgressBar(pb,permIdx)
+    }
+    close(pb)
+    pval_pt = 1 - sum(randomCor < cor_pt) / length(randomCor)
+    protInfo = list(prototype = pt, correlation = cor_pt, pvalue = pval_pt)
+    
+    Pathways_prot[[enrichedPath[annIDs[i],"Description"]]] = protInfo
+  }
+  
+  return(Pathways_prot)
+}
+
+
+create_prot = function(RPGenes,genes, nDosesInt = 50, nTimesInt = 50){
+  mx = rep(0, nDosesInt)
+  my = rep(0, nTimesInt)
+  mz = matrix(0,nDosesInt,nTimesInt)
+  for(j in 1:length(genes)){
+    mz = mz + RPGenes[[genes[j]]][[3]]
+  }
+  mx = RPGenes[[genes[1]]][[1]]
+  my = RPGenes[[genes[1]]][[2]]
+  mz = mz/length(genes)
+  L = list(mx, my, mz)
+  return(L)
+}
+
+
 #'
 #' This function perform enchment of the genes in each cluster
 #'
@@ -21,7 +70,7 @@
 #' @export
 #'
 
-compute_enrichment = function(optimal_clustering,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE){
+compute_enrichment_for_clusters = function(optimal_clustering,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE){
 
   nClust = length(unique(optimal_clustering))
 
@@ -51,6 +100,48 @@ compute_enrichment = function(optimal_clustering,corrType = "fdr",type_enrich="K
   return(EnrichDatList)
 }
 
+#'
+#' This function perform enchment of a set of genes
+#'
+#' @importFrom AnnotationDbi select
+#' @importFrom gProfileR gprofiler
+#' @importFrom gtools invalid
+#' @import org.Hs.eg.db
+#' @import org.Mm.eg.db
+#' @import org.Rn.eg.db
+#'
+#' @param geneList vector of gene identifiers
+#' @param corrType string specifing the algorithm used for determining the significance threshold, one of gSCS, fdr, bonferroni. Default: fdr
+#' @param type_enrich string specifying the enrichment type. Default = KEGG
+#' @param org_enrich string specifying the organism. Default = rnorvegicus
+#' @param pth numeric value specifyint the pvalue threshold. Default = 0.05
+#' @param sig whether all or only statistically significant results should be returned
+#' @param mis minimum size of functional category, smaller categories are excluded
+#' @param only_annotated statistical domain size, one of "annotated", "known"
+#' @return a list with the enriched pathways for each cluster of genes
+#'
+#' @export
+#'
+compute_pathways = function(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", org_enrich = "hsapiens",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE ){
+  GList = list(matrix(geneList, ncol = 1))
+  GList = convert_genes(organism = org_enrich, GList=GList, annType = "SYMBOL")
+  
+  if(corrType == "none"){
+    print("Nominal PValue")
+    EnrichDatList = lapply(GList,enrich,type_enrich,org_enrich,pth,"bonferroni", sig = sig, mis = mis, only_annotated=only_annotated)
+    for(i in 1:length(EnrichDatList)){
+      ERi = EnrichDatList[[i]]
+      ERi$pValueAdj = ERi$pValueAdj / length(ERi$pValueAdj)
+      ERi$pValue = ERi$pValueAdj / length(ERi$pValue)
+      EnrichDatList[[i]] = ERi
+    }
+  }else{
+    EnrichDatList = lapply(GList,enrich,type_enrich,org_enrich,pth,corrType, sig = sig,  mis = mis, only_annotated=only_annotated)
+  }
+  EnrichDatList = EnrichDatList[[1]]
+  return(EnrichDatList)
+  
+}
 
 #'
 #' This function perform enchment of the genes in each cluster
