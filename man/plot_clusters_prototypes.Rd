@@ -8,7 +8,7 @@ plot_clusters_prototypes(meanXYZ, nR = 2, nC = 5,
   activity_threshold = activity_threshold,
   BMD_resonse_threhold = BMD_resonse_threhold, nDoseInt = nDoseInt,
   nTimeInt = nTimeInt, doseLabels = doseLabels,
-  timeLabels = timeLabels)
+  timeLabels = timeLabels, oma = c(0, 1, 1, 0), mar = rep(2, 4))
 }
 \arguments{
 \item{meanXYZ}{a list the contour object for each prototype computed with the function create_prototypes}

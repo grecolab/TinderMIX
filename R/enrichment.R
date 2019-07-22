@@ -1,4 +1,23 @@
-create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contour_res = contour_res, mode = "mean", allPath = FALSE){
+#'
+#' This function create prototypes for a list of pathways
+#'
+#' @importFrom AnnotationDbi select
+#' @importFrom gProfileR gprofiler
+#' @importFrom gtools invalid
+#' @import org.Hs.eg.db
+#' @import org.Mm.eg.db
+#' @import org.Rn.eg.db
+#'
+#' @param enrichedPath dataframe of enriched pathways coming from the compute_pathways function
+#' @param annIDs vector with the pathways IDs for which the prototype will be computed
+#' @param contour_res a list with the contours object returned in output by the create_contour function
+#' @param nPerm number of permutation to run to compute the pvalue associated to pathway correaltion
+#' @return a list with the prototypes of the pathways, their genes correlation and a pvalue
+#'
+#' @export
+#'
+
+create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contour_res = contour_res, nPerm = 100){
  # diss.cor <-1- abs(stats::cor(contour_res$GenesMap,method="pearson"))
   rownames(enrichedPath) = enrichedPath[,"annID"]
   RPGenes = contour_res$RPGenes
@@ -16,8 +35,8 @@ create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contou
     pt = create_prot(RPGenes = RPGenes, genes=genes)
     cor_pt = mean(abs(stats::cor(GenesMap[,genes],method="pearson")))
     randomCor = c()
-    pb = txtProgressBar(min = 1, max = 100, style = 3)
-    for(permIdx in 1:100){
+    pb = txtProgressBar(min = 1, max = nPerm, style = 3)
+    for(permIdx in 1:nPerm){
       randomCor = c(randomCor, mean(abs(stats::cor(GenesMap[,sample(x = 1:ncol(GenesMap),size = length(genes))],method="pearson"))))
       setTxtProgressBar(pb,permIdx)
     }
