@@ -19,7 +19,7 @@ test_that("pipeline works", {
   # parameter BMD identification
   activity_threshold = 0.1
   BMD_resonse_threhold = 0.5
-  mode = "cumulative"
+  mode = "presence"
   timeLabels = c("Late","Middle","Early")
   doseLabels = c("Sensitive","Intermediate","Resilient")
   nTimeInt = 3
@@ -87,19 +87,16 @@ test_that("pipeline works", {
                          tosave=FALSE, addLegend = FALSE, path = ".",
                          relGenes = contour_res$ggenes, toPlot = FALSE)
   
-  
   print("Step 5: compute pathways for every gene label and plot wordcloud")
   mat_enrich_res = create_tic_tac_toe_wordcloud(Mat = res$Mat,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0,
                                           corrType = "fdr",type_enrich="REAC", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
     
-  
-  
   print("Step 5 bis: compute pathways enriched from the dose-response genes")
       #####  compute pathways
   enrichedPath = compute_pathways(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE )
       #####  create prototype for selected pathways (annIDs) and compute mean gene correlation and pvalue with permutation test
-  PatProt = create_pathway_prototypes(enrichedPath = enrichedPath, annIDs = c("00270","04152","01100"),contour_res = contour_res, mode = "mean")
-  
+  PatProt = create_pathway_prototypes(enrichedPath = enrichedPath, annIDs = c("00270","04152","01100"),contour_res = contour_res,nPerm = 100)
+
       ##### example on how to plot pathway prototype
   immy = PatProt$`Metabolic pathways`$prototype[[3]]
   coord = cbind(PatProt$`Metabolic pathways`$prototype[[1]],PatProt$`Metabolic pathways`$prototype[[2]])
