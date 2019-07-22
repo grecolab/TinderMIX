@@ -290,6 +290,15 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   
   if(max(abs(immy))<activity_threshold){
     print("No DE gene")
+    
+    if(toPlot){
+      if(tosave){
+        grDevices::png(filename = paste(path, geneName, ".png", sep=""))
+      }
+      graphics::image(coord[,1], coord[,2], rotate(immy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
+      raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
+    }
+    
     return(1)
   }
   
@@ -341,6 +350,13 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
 
   if((n50Yellow+n50Green)==0){ #none of the two areaa reach the highest dose
     print("No responsive area")
+    if(toPlot){
+      if(tosave){
+        grDevices::png(filename = paste(path, geneName, ".png", sep=""))
+      }
+      graphics::image(coord[,1], coord[,2], rotate(immy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
+      raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
+    }
     return(2)
   }
   

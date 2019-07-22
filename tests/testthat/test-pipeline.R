@@ -94,17 +94,17 @@ test_that("pipeline works", {
   optcl =pr$clusters
   clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
 
-  print("Step 4bis: performing clustering based on gene labels")
+  # print("Step 4bis: performing clustering based on gene labels")
   hls_res = hls_labelbased_clustering(GenesMap=res$Mat, nClust = c(5,10,25,50,75,100,125,150,175,200,250,300), method="pearson", hls.method = "ward")
-  
-  print("Step 5: Identify optimal clustering and creating prototypes")
-  pr = hls_res$hls_res[[which.max(summaryMat[,5])]]
-  optcl =pr$clusters
-  clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
-  
+  # 
+  # print("Step 5: Identify optimal clustering and creating prototypes")
+  # pr = hls_res$hls_res[[which.max(summaryMat[,5])]]
+  # optcl =pr$clusters
+  # clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl)
+  # 
   
   print("Step 6: print clustering prototype and identify cluster labels")
-  #plot_clusters_prototypes(meanXYZ=clpr$meanXYZ)
+  plot_clusters_prototypes_plotly(meanXYZ=clpr$meanXYZ)
   
   labels = plot_clusters_prototypes(meanXYZ=clpr$meanXYZ, nR = 2, nC = 5,
                                       activity_threshold = activity_threshold,

@@ -219,8 +219,16 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
                                     doseLabels = doseLabels, 
                                     timeLabels = timeLabels){
   
+    label_leg = c()
+    for(i in doseLabels){
+      for(j in timeLabels){
+        label_leg = c(label_leg, paste(i,j,sep="-"))
+      }
+    }
 
+    #computing legend for each prototype
     labels = c()
+    mainplots = list()     # this will be the list with the label of every prototype
     for(i in 1:length(meanXYZ)){
       print(i)
       immy = contour_res$RPGenes[[i]][[3]]
@@ -233,22 +241,73 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
                               timeLabels = timeLabels,
                               doseLabels = doseLabels, toPlot = FALSE, tosave = FALSE)
       
-      if(is.null(res2$label)){
+      if(class(res2)== "numeric"){
         labels = rbind(labels, c(rep(0, nDoseInt*nTimeInt),0))
+        if(res2 == 1){
+          mainplots[[i]] = "No Response"
+          
+        }else{
+          mainplots[[i]] = "No Dose Response"
+        }
+        
       }else{
-        labels = rbind(labels, c(as.vector(res2$label$ttt_label),res2$verso))
+        if(is.null(res2$label)){
+          labels = rbind(labels, c(rep(0, nDoseInt*nTimeInt),0))
+          mainplots[[i]] = "No Dose Response"
+        }else{
+          labels = rbind(labels, c(as.vector(res2$label$ttt_label),res2$verso))
+          ttlab = paste(label_leg[as.vector(res2$label$ttt_label)!=0], collapse = " ")
+          mainplots[[i]] = ttlab 
+        }
         
       }
       
     }
+    
+    verso = labels[,ncol(labels)]
+    labels = labels[,1:(ncol(labels)-1)]
+    colnames(labels) = label_leg
+    
+    m = matrix(c(1:(nR*nC),rep((nR*nC)+1, nC)), nrow = nR + 1, ncol = nC, byrow = T)
+    graphics::layout(mat = m,heights = c(0.4,0.4,0.2))
+    
+    for(i in 1:length(meanXYZ)){
+      print(i)
+      immy = contour_res$RPGenes[[i]][[3]]
+      coord = cbind(contour_res$RPGenes[[i]][[1]],contour_res$RPGenes[[geneName]][[2]])
+      res2 = compute_BMD_IC50(immy,coord, mainplots[[i]],
+                              activity_threshold = activity_threshold,
+                              BMD_resonse_threhold = BMD_resonse_threhold,
+                              mode = mode,
+                              nTimeInt = nTimeInt,nDoseInt=nDoseInt,
+                              timeLabels = timeLabels,
+                              doseLabels = doseLabels, toPlot = TRUE, tosave = FALSE,addLegend = FALSE)
+    }
+    
+    
+    if(i<(nR*nC)){
+      plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+    }else{
+      plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+      graphics::legend(x="center",
+                       c("Non responsive Area", "responsive Increasing","Responsive Decreasing",  "Dose-Response","IC50"),
+                       col =c(NA, NA,NA,"gold", "red"),
+                       lty = c(NA,NA,NA,1,1),
+                       fill = c("darkblue","darkgreen","brown",NA,NA),
+                       border = c("darkblue","darkgreen","brown",NA,NA),
+                       lwd = c(NA,NA,NA,3,3),
+                       xpd = NA, ncol = 2,box.lwd = 0,box.col = "white",bg = "white")
+      
+    }
+    
 }
 
 
-# plot_clusters_prototypes = function(meanXYZ, nR = 2, contour_size=0.05){
-#   
+# plot_clusters_prototypes_plotly = function(meanXYZ, nR = 2, contour_size=0.05){
+# 
 #   min_th = 100
 #   max_th = -100
-#   
+# 
 #   for(i in 1:length(meanXYZ)){
 #     mi = min(meanXYZ[[i]][[3]])
 #     mix = max(meanXYZ[[i]][[3]])
@@ -259,19 +318,19 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
 #       max_th = mix
 #     }
 #   }
-#   
+# 
 #   PL = list()
 #   for(i in 1:length(meanXYZ)){
-#     PL[[i]] <- plotly::plot_ly(x = meanXYZ[[i]][[1]], 
-#                                y = meanXYZ[[i]][[2]], 
-#                                z = t(meanXYZ[[i]][[3]]), 
-#                                type = "contour", 
+#     PL[[i]] <- plotly::plot_ly(x = meanXYZ[[i]][[1]],
+#                                y = meanXYZ[[i]][[2]],
+#                                z = t(meanXYZ[[i]][[3]]),
+#                                type = "contour",
 #                                autocontour = F,
 #                                contours = list(
 #                                  start = min_th,
 #                                  end = max_th,
 #                                  size = contour_size
-#                                )) 
+#                                ))
 #   }
 #   p = plotly::subplot(PL,nrows = nR)
 #   print(p)
