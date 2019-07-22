@@ -32,7 +32,7 @@ compute_enrichment = function(optimal_clustering,corrType = "fdr",type_enrich="K
 
   }
 
-  GList = convert_genes(organism = "Rat", GList=GList, annType = "SYMBOL")
+  GList = convert_genes(organism = org_enrich, GList=GList, annType = "SYMBOL")
 
 
   if(corrType == "none"){
@@ -116,7 +116,7 @@ enrich = function(x, type, org, pval, adjust_method,sig = FALSE, mis = 0, only_a
 #'
 convert_genes = function(organism = "hsapiens", GList, annType = "SYMBOL"){
 
-  orgLibs <- list("Human"=org.Hs.eg.db, "Mouse"=org.Mm.eg.db, "Rat" = org.Rn.eg.db)
+  orgLibs <- list("hsapiens"=org.Hs.eg.db, "mouse"=org.Mm.eg.db, "rnorvegicus" = org.Rn.eg.db)
   orgDB <- orgLibs[[organism]]
 
   if(annType == "SYMBOL"){

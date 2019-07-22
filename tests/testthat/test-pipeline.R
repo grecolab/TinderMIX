@@ -123,7 +123,7 @@ test_that("pipeline works", {
                                       timeLabels = timeLabels)
     
 
-  enrRes = compute_enrichment(clpr$optcl,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
+  enrRes = compute_enrichment(optimal_clustering = optcl,corrType = "fdr",type_enrich="KEGG", org_enrich = "hsapiens",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
   #write_xlsx_for_funmappone(clpr$optcl,filePath = "../contour_clustering/gene_clustering2.xlsx")
   # save.image("../contour_clustering/gene_clustering.RData")
 
