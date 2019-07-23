@@ -90,6 +90,12 @@ create_tic_tac_toe_wordcloud = function(Mat = res$Mat,max.words = 200,scale = c(
 create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contour_res = contour_res, nPerm = 100){
  # diss.cor <-1- abs(stats::cor(contour_res$GenesMap,method="pearson"))
   rownames(enrichedPath) = enrichedPath[,"annID"]
+  
+  if((sum(annIDs) %in% rownames(enrichedPath))< length(annIDs)){
+    print("ERROR: pathways IDs not present in the dataset")
+    return(NULL)
+  }
+  
   RPGenes = contour_res$RPGenes
   names(RPGenes) = toupper(names(RPGenes))
   GenesMap = contour_res$GenesMap

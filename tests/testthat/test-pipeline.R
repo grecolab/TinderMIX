@@ -95,12 +95,12 @@ test_that("pipeline works", {
       #####  compute pathways
   enrichedPath = compute_pathways(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE )
       #####  create prototype for selected pathways (annIDs) and compute mean gene correlation and pvalue with permutation test
-  PatProt = create_pathway_prototypes(enrichedPath = enrichedPath, annIDs = c("00270","04152","01100"),contour_res = contour_res,nPerm = 100)
+  PatProt = create_pathway_prototypes(enrichedPath = enrichedPath, annIDs = c("04973"),contour_res = contour_res,nPerm = 100)
 
       ##### example on how to plot pathway prototype
-  immy = PatProt$`Metabolic pathways`$prototype[[3]]
-  coord = cbind(PatProt$`Metabolic pathways`$prototype[[1]],PatProt$`Metabolic pathways`$prototype[[2]])
-  res2 = compute_BMD_IC50(immy,coord, "Metabolic pathways",
+  immy = PatProt$`Carbohydrate digestion and absorption`$prototype[[3]]
+  coord = cbind(PatProt$`Carbohydrate digestion and absorption`$prototype[[1]],PatProt$`Carbohydrate digestion and absorption`$prototype[[2]])
+  res2 = compute_BMD_IC50(immy,coord, "Carbohydrate digestion and absorption",
                           activity_threshold = activity_threshold,
                           BMD_resonse_threhold = BMD_resonse_threhold,
                           mode = mode,
