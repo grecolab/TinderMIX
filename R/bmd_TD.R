@@ -186,7 +186,7 @@ rotate <- function(x) t(apply(x, 2, rev))
 #' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
 #' @param geneName is a character string containing the gene name
 #' @param activity_threshold threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls
-#' @param BMD_resonse_threhold a threshold to define the portion of dose-response area to be identified as labels for the gene.
+#' @param BMD_response_threshold a threshold to define the portion of dose-response area to be identified as labels for the gene.
 #' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
 #' @param nTimeInt number of time related breaks in the gene label's table. default is 3
 #' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
@@ -200,7 +200,7 @@ rotate <- function(x) t(apply(x, 2, rev))
 #' @export
 #'
 
-run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_resonse_threhold = 0.95, 
+run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_threshold = 0.95, 
                             nDoseInt=3, nTimeInt=3, 
                             doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"),
                             tosave=FALSE, toPlot = FALSE, addLegend = FALSE, path = ".",
@@ -226,7 +226,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_resonse_th
     immy = contour_res$RPGenes[[geneName]][[3]]
     coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
     tryCatch({
-      res = compute_BMD_IC50(immy,coord, geneName,activity_threshold = activity_threshold,BMD_resonse_threhold=BMD_resonse_threhold,
+      res = compute_BMD_IC50(immy,coord, geneName,activity_threshold = activity_threshold,BMD_response_threshold=BMD_response_threshold,
                              nDoseInt=nDoseInt,nTimeInt=nTimeInt,doseLabels=doseLabels,timeLabels=timeLabels,tosave = tosave,path = path, toPlot = toPlot, addLegend = addLegend,mode=mode)
       GeneRes[[geneName]] = res
       if(is.null(res$verso)==FALSE){
@@ -270,7 +270,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_resonse_th
 #' @param coord matrix with x and y coordinate. The first column contain the doses, while the second one the time points
 #' @param geneName is a character string containing the gene name
 #' @param activity_threshold threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls
-#' @param BMD_resonse_threhold a threshold to define the portion of dose-response area to be identified as labels for the gene.
+#' @param BMD_response_threshold a threshold to define the portion of dose-response area to be identified as labels for the gene.
 #' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
 #' @param nTimeInt number of time related breaks in the gene label's table. default is 3
 #' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
@@ -285,7 +285,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_resonse_th
 #' @export
 #'
 
-compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_resonse_threhold = 0.95, nDoseInt=3, nTimeInt=3, 
+compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_response_threshold = 0.95, nDoseInt=3, nTimeInt=3, 
                             doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"), toPlot = TRUE,addLegend = TRUE, tosave=FALSE, path = ".", mode = "cumulative"){
   gridSize = nrow(immy)
   immy = rotate(rotate(rotate(immy)))
@@ -498,7 +498,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
     return(ans)
   }
   
-  restt0 = label2DMap(map = ternaryIMBMD,coord=coord,myContour = myContour,th = BMD_resonse_threhold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
+  restt0 = label2DMap(map = ternaryIMBMD,coord=coord,myContour = myContour,th = BMD_response_threshold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
   
   BMD = ternaryIMBMD
   BMD[BMD==0] = NA

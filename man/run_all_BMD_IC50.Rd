@@ -5,7 +5,7 @@
 \title{This function run the compute_BMD_IC50 for all genes and return a matrix with label associated to every gene}
 \usage{
 run_all_BMD_IC50(contour_res, activity_threshold = 0.1,
-  BMD_resonse_threhold = 0.95, nDoseInt = 3, nTimeInt = 3,
+  BMD_response_threshold = 0.95, nDoseInt = 3, nTimeInt = 3,
   doseLabels = c("Late", "Middle", "Early"),
   timeLabels = c("Sensitive", "Intermediate", "Resilient"),
   tosave = FALSE, toPlot = FALSE, addLegend = FALSE, path = ".",
@@ -16,7 +16,7 @@ run_all_BMD_IC50(contour_res, activity_threshold = 0.1,
 
 \item{activity_threshold}{threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls}
 
-\item{BMD_resonse_threhold}{a threshold to define the portion of dose-response area to be identified as labels for the gene.}
+\item{BMD_response_threshold}{a threshold to define the portion of dose-response area to be identified as labels for the gene.}
 
 \item{nDoseInt}{number of dose related breaks in the gene label's table. default is 3}
 

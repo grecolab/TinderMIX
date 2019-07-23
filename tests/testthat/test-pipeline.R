@@ -18,7 +18,7 @@ test_that("pipeline works", {
   
   # parameter BMD identification
   activity_threshold = 0.1
-  BMD_resonse_threhold = 0.5
+  BMD_response_threshold = 0.5
   mode = "presence"
   timeLabels = c("Late","Middle","Early")
   doseLabels = c("Sensitive","Intermediate","Resilient")
@@ -70,7 +70,7 @@ test_that("pipeline works", {
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   res2 = compute_BMD_IC50(immy,coord, geneName,
                           activity_threshold = activity_threshold,
-                          BMD_resonse_threhold = BMD_resonse_threhold,
+                          BMD_response_threshold = BMD_response_threshold,
                           mode = mode,
                           nTimeInt = nTimeInt,nDoseInt=nDoseInt,
                           timeLabels = timeLabels,
@@ -80,7 +80,7 @@ test_that("pipeline works", {
   print("Step 4: Run BMD_IC50 analysis on every gene")
   res = run_all_BMD_IC50(contour_res = contour_res,
                          activity_threshold = activity_threshold,  
-                         BMD_resonse_threhold = BMD_resonse_threhold, 
+                         BMD_response_threshold = BMD_response_threshold, 
                          mode=mode, 
                          nDoseInt=nDoseInt, nTimeInt=nTimeInt, 
                          doseLabels = doseLabels, timeLabels = timeLabels,
@@ -102,7 +102,7 @@ test_that("pipeline works", {
   coord = cbind(PatProt$`Carbohydrate digestion and absorption`$prototype[[1]],PatProt$`Carbohydrate digestion and absorption`$prototype[[2]])
   res2 = compute_BMD_IC50(immy,coord, "Carbohydrate digestion and absorption",
                           activity_threshold = activity_threshold,
-                          BMD_resonse_threhold = BMD_resonse_threhold,
+                          BMD_response_threshold = BMD_response_threshold,
                           mode = mode,
                           nTimeInt = nTimeInt,nDoseInt=nDoseInt,
                           timeLabels = timeLabels,
@@ -117,7 +117,7 @@ test_that("pipeline works", {
   clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl, mode = "mean")   # mode can be, mean, median, or prot
   labels = plot_clusters_prototypes(meanXYZ = clpr, nR = 2, nC = 5,
                                     activity_threshold = activity_threshold,
-                                    BMD_resonse_threhold = BMD_resonse_threhold,
+                                    BMD_response_threshold = BMD_response_threshold,
                                     nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
                                     doseLabels = doseLabels, 
                                     timeLabels = timeLabels)
@@ -130,7 +130,7 @@ test_that("pipeline works", {
   
   labels = plot_clusters_prototypes(meanXYZ = clpr_labels, nR = 4, nC = 4,
                                       activity_threshold = activity_threshold,
-                                      BMD_resonse_threhold = BMD_resonse_threhold,
+                                      BMD_response_threshold = BMD_response_threshold,
                                       nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
                                       doseLabels = doseLabels, 
                                       timeLabels = timeLabels)

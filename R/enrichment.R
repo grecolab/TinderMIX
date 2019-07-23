@@ -91,7 +91,7 @@ create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contou
  # diss.cor <-1- abs(stats::cor(contour_res$GenesMap,method="pearson"))
   rownames(enrichedPath) = enrichedPath[,"annID"]
   
-  if((sum(annIDs) %in% rownames(enrichedPath))< length(annIDs)){
+  if((sum(annIDs %in% rownames(enrichedPath)))< length(annIDs)){
     print("ERROR: pathways IDs not present in the dataset")
     return(NULL)
   }

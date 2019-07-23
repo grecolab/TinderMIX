@@ -6,7 +6,7 @@
 \usage{
 plot_clusters_prototypes(meanXYZ, nR = 2, nC = 5,
   activity_threshold = activity_threshold,
-  BMD_resonse_threhold = BMD_resonse_threhold, nDoseInt = nDoseInt,
+  BMD_response_threshold = BMD_response_threshold, nDoseInt = nDoseInt,
   nTimeInt = nTimeInt, doseLabels = doseLabels,
   timeLabels = timeLabels, oma = c(0, 1, 1, 0), mar = rep(2, 4))
 }
