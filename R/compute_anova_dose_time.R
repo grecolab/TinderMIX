@@ -8,12 +8,19 @@
 #' @param pheno_data is a dataframe with phenodata informations. Samples are on the rows. The columns should include the dose and time point information.
 #' @param dose_index numeric value specifing the column of the phenodata table containing the doses
 #' @param time_point_index numeric value specifing the column of the phenodata table containing the time points
+#' @param adj.method a string specifying the adjustement method for the pvalue
 #' @return a matrix with pvalue associated to the dose, timepoint and the dose*timepoint effect
 #' @export
 #'
 #'
 
-compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point_index){
+compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point_index, adj.method = "none"){
+  
+  if(adj.method %in% c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY","fdr", "none") == FALSE){
+    print("the adjusted method is not correct!")
+    return(NULL)
+  }
+  
   PvalMat = c()
   anova_models = list()
   pb = txtProgressBar(min=1, max = nrow(exp_data), style = 3)
@@ -36,11 +43,19 @@ compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point
 
   colnames(PvalMat) = c("Dose","Time","DoseTime")
   rownames(PvalMat) = rownames(exp_data)
-  PvalMatAdj = PvalMat
-  PvalMatAdj[,1] = stats::p.adjust(PvalMatAdj[,1], method = "fdr")
-  PvalMatAdj[,2] = stats::p.adjust(PvalMatAdj[,2], method = "fdr")
-  PvalMatAdj[,3] = stats::p.adjust(PvalMatAdj[,3], method = "fdr")
-  return(PvalMat)
+  
+  if(adj.method == "none"){
+    return(PvalMat)
+  }else{
+    PvalMatAdj = PvalMat
+    PvalMatAdj[,1] = stats::p.adjust(PvalMatAdj[,1], method = adj.method)
+    PvalMatAdj[,2] = stats::p.adjust(PvalMatAdj[,2], method = adj.method)
+    PvalMatAdj[,3] = stats::p.adjust(PvalMatAdj[,3], method = adj.method)
+    return(PvalMatAdj)
+    
+  }
+  
+  
 }
 
 #'

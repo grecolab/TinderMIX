@@ -4,7 +4,8 @@
 \alias{compute_anova_dose_time}
 \title{This function computes a two way anova between dose and time for the expression value of every genes}
 \usage{
-compute_anova_dose_time(exp_data, pheno_data, dose_index, time_point_index)
+compute_anova_dose_time(exp_data, pheno_data, dose_index, time_point_index,
+  adj.method = "none")
 }
 \arguments{
 \item{exp_data}{is the expression matrix with genes on the rows and samples on the columns}
@@ -14,6 +15,8 @@ compute_anova_dose_time(exp_data, pheno_data, dose_index, time_point_index)
 \item{dose_index}{numeric value specifing the column of the phenodata table containing the doses}
 
 \item{time_point_index}{numeric value specifing the column of the phenodata table containing the time points}
+
+\item{adj.method}{a string specifying the adjustement method for the pvalue}
 }
 \value{
 a matrix with pvalue associated to the dose, timepoint and the dose*timepoint effect
