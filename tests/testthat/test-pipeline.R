@@ -128,12 +128,12 @@ test_that("pipeline works", {
   optcl_labels =pr_labels$clusters
   clpr_labels = create_prototypes(clust_res = hls_res_labels,contour_res = contour_res,optcl=optcl_labels, mode = "mean")
   
-  labels = plot_clusters_prototypes(meanXYZ = clpr_labels, nR = 4, nC = 4,
+  labels = plot_clusters_prototypes(meanXYZ = clpr_labels, nR = 4, nC = 3,
                                       activity_threshold = activity_threshold,
                                       BMD_response_threshold = BMD_response_threshold,
                                       nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
                                       doseLabels = doseLabels, 
-                                      timeLabels = timeLabels)
+                                      timeLabels = timeLabels, mode = mode)
     
   print("Step 8: perform enrichment for each clusters in funmappone style")
   enrRes = compute_enrichment_for_clusters(optimal_clustering = optcl,corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)

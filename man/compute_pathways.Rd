@@ -5,8 +5,8 @@
 \title{This function perform enchment of a set of genes}
 \usage{
 compute_pathways(geneList = rownames(res$Mat), corrType = "fdr",
-  type_enrich = "KEGG", org_enrich = "hsapiens", pth = 0.05,
-  sig = FALSE, mis = 0, only_annotated = FALSE)
+  type_enrich = "KEGG", annType = "SYMBOL", org_enrich = "hsapiens",
+  pth = 0.05, sig = FALSE, mis = 0, only_annotated = FALSE)
 }
 \arguments{
 \item{geneList}{vector of gene identifiers}
@@ -14,6 +14,8 @@ compute_pathways(geneList = rownames(res$Mat), corrType = "fdr",
 \item{corrType}{string specifing the algorithm used for determining the significance threshold, one of gSCS, fdr, bonferroni. Default: fdr}
 
 \item{type_enrich}{string specifying the enrichment type. Default = KEGG}
+
+\item{annType}{gene annotation type. default = SYMBOL}
 
 \item{org_enrich}{string specifying the organism. Default = rnorvegicus}
 

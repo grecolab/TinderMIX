@@ -24,31 +24,30 @@
 #' @return a list with the enriched pathways for each cluster of genes
 #'
 #' @export
-#'
 
 create_tic_tac_toe_wordcloud = function(Mat = res$Mat,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0,
                                         corrType = "fdr",type_enrich="REAC", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE){
   # library(wordcloud)
   # library(clusterProfiler)
-  
+
   Enriched_list = list()
   for(i in c(1,4,7,2,5,8,3,6,9)){
     gi = Mat[,i]
     all_gi = names(gi[gi!=0])
     # gi_pos = names(gi[gi>0])
     # gi_neg = names(gi[gi<0])
-    
+
     EP_all = compute_pathways(geneList = all_gi,corrType = corrType,type_enrich=type_enrich, org_enrich = org_enrich,pth = pth,sig = sig,mis = mis,only_annotated=only_annotated )
     # toRem = which(EP_all$Description %in% "Reactome")
     # if(length(toRem)>0) EP_all = EP_all[-toRem,]
-    
+
     Enriched_list[[colnames(Mat)[i]]] = EP_all
-    
+
   }
-  
-  
+
+
  par(mfrow = c(3,3), oma = c(0,0,0,0) + 0.1, mar = c(0,0,0,0) + 0.1)
-  
+
   for(i in 1:length(Enriched_list)){
     EP_all = Enriched_list[[i]]
     if(nrow(EP_all)==0){
@@ -56,15 +55,15 @@ create_tic_tac_toe_wordcloud = function(Mat = res$Mat,max.words = 200,scale = c(
     }else{
       #d = data.frame(word = substring(text = EP_all$Description,first = 1,last = 20), freq = log(EP_all$pValueAdj) * -2)
       d = data.frame(word = EP_all$Description, freq = log(EP_all$pValueAdj) * -2)
-      
+
       # set.seed(1234)
       wordcloud::wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
-                max.words=max.words, random.order=random.order, 
+                max.words=max.words, random.order=random.order,
                 colors=brewer.pal(8, "Dark2"), scale = scale)
-      
+
     }
   }
-  
+
   return(Enriched_list)
 }
 
@@ -213,13 +212,14 @@ compute_enrichment_for_clusters = function(optimal_clustering,corrType = "fdr",t
 #' @param sig whether all or only statistically significant results should be returned
 #' @param mis minimum size of functional category, smaller categories are excluded
 #' @param only_annotated statistical domain size, one of "annotated", "known"
+#' @param annType gene annotation type. default = SYMBOL
 #' @return a list with the enriched pathways for each cluster of genes
 #'
 #' @export
 #'
-compute_pathways = function(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", org_enrich = "hsapiens",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE ){
+compute_pathways = function(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", annType = "SYMBOL",org_enrich = "hsapiens",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE ){
   GList = list(matrix(geneList, ncol = 1))
-  GList = convert_genes(organism = org_enrich, GList=GList, annType = "SYMBOL")
+  GList = convert_genes(organism = org_enrich, GList=GList, annType = annType)
   
   if(corrType == "none"){
     print("Nominal PValue")
