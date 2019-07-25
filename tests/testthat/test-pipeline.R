@@ -120,7 +120,7 @@ test_that("pipeline works", {
                                     BMD_response_threshold = BMD_response_threshold,
                                     nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
                                     doseLabels = doseLabels, 
-                                    timeLabels = timeLabels)
+                                    timeLabels = timeLabels, mode = mode)
   
   print("Step 7bis: Identify optimal clustering based on gene labels, creating and plotting prototypes")
   hls_res_labels = hls_labelbased_clustering(GenesMap=res$Mat, nClust = nClust, method="pearson", hls.method = "ward")
