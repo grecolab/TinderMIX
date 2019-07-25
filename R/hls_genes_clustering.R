@@ -242,13 +242,18 @@ create_prototypes = function(clust_res,contour_res, optcl, mode = "mean"){ #summ
 #'
 #' @param meanXYZ a list the contour object for each prototype computed with the function create_prototypes
 #' @param nR the number of rows to use in the plot
-#' @param contour_size number specifying the distance between each contour line
-#' 
-#'
+#' @param nC the number of columns to use in the plot
+#' @param mode is a character specifying when an area is called active. values can be "cumulative" or "presence". If presence, an area is called active if at least one of its pixel is on the BMD curve. If cumulative, the number of region needed to reach the th% of the cumulative of the number of pixel on the BMD curve is identified.
+#' @param activity_threshold threshold defining the responsive gene area. Eg. if the immy maps contains genes logFC, then an activity_threhdold = 0.58 means that the active area will be the one with an effect of 1.5 bigger or smaller than the controls
+#' @param BMD_response_threshold a threshold to define the portion of dose-response area to be identified as labels for the gene.
+#' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
+#' @param nTimeInt number of time related breaks in the gene label's table. default is 3
+#' @param doseLabels vector of colnames (doses) for the gene label's table. default is  c("Sensitive","Intermediate","Resilient")
+#' @param timeLabels vector of rownames (time points) for the gene label's table. default c("Late","Middle","Early")
 #' @export
 #'
 
-plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
+plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5, mode = "cumulative",
                                     activity_threshold = activity_threshold,
                                     BMD_response_threshold = BMD_response_threshold,
                                     nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
@@ -306,13 +311,24 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5,
     labels = labels[,1:(ncol(labels)-1)]
     colnames(labels) = label_leg
     
-    if(length(length(meanXYZ)) < (nR*nC)){
-      m = matrix(1:(nR*nC), nrow = nR, ncol = nC, byrow = T)
-      increased = FALSE
-    }else{
+    if(length(meanXYZ) == (nR*nC)){
       m = matrix(c(1:(nR*nC),rep((nR*nC)+1, nC)), nrow = nR + 1, ncol = nC, byrow = T)
+      
       increased = TRUE
+    }else{
+      
+      if(length(meanXYZ) < (nR*nC)){
+        m = matrix(1:(nR*nC), nrow = nR, ncol = nC, byrow = T)
+        
+        increased = FALSE
+      }else{
+        print("please increase grid size!")
+        return(NULL)
+      }
+      
     }
+    
+    print(m)
     
     par(oma = oma + 0.1,
         mar = mar + 0.1)

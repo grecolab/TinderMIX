@@ -65,7 +65,7 @@ test_that("pipeline works", {
 
   
       ######  Example of how to plot gene map
-  geneName = "Hspbp1"
+  geneName = "Hebp1"
   immy = contour_res$RPGenes[[geneName]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   res2 = compute_BMD_IC50(immy,coord, geneName,
@@ -115,7 +115,7 @@ test_that("pipeline works", {
   pr = hls_res$hls_res[[which.max(hls_res$summaryMat[,5])]]
   optcl =pr$clusters
   clpr = create_prototypes(clust_res = hls_res,contour_res = contour_res,optcl=optcl, mode = "mean")   # mode can be, mean, median, or prot
-  labels = plot_clusters_prototypes(meanXYZ = clpr, nR = 2, nC = 5,
+  labels = plot_clusters_prototypes(meanXYZ = clpr, nR = 3, nC = 4,
                                     activity_threshold = activity_threshold,
                                     BMD_response_threshold = BMD_response_threshold,
                                     nDoseInt = nDoseInt, nTimeInt = nTimeInt, 
