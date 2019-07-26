@@ -479,7 +479,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
 
   
   }
-  if(sum(ternaryIMBMD)==0){
+  if(sum(ternaryIMBMD)==0 || class(myContour)=="integer"){
    # print("No dose response gene")
     ans = list()
     ans$immy = immy

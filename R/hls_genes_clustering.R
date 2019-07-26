@@ -276,7 +276,7 @@ plot_clusters_prototypes = function(meanXYZ, nR = 2, nC = 5, mode = "cumulative"
       print(i)
       immy = meanXYZ[[i]][[3]]
       coord = cbind(meanXYZ[[i]][[1]],meanXYZ[[i]][[2]])
-      res2 = compute_BMD_IC50(immy,coord, i,
+      res2 = compute_BMD_IC50(immy,coord, geneName = i,
                               activity_threshold = activity_threshold,
                               BMD_response_threshold = BMD_response_threshold,
                               mode = mode,
