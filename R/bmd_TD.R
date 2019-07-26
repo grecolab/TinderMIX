@@ -480,7 +480,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   
   }
   if(sum(ternaryIMBMD)==0){
-    print("No dose response gene")
+   # print("No dose response gene")
     ans = list()
     ans$immy = immy
     ans$activity_threshold = activity_threshold
@@ -491,6 +491,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
     ans$tracedarea = res
     ans$bmd = NULL
     ans$IC50 = NULL
+    ans$geneName = geneName
+    
     class(ans) = 'TinderMIX'
     if(toPlot){
       if(tosave) grDevices::dev.off()
@@ -554,6 +556,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   ans$tracedarea = res
   ans$bmd = ddd
   ans$IC50 = ddd2
+  ans$geneName = geneName
   class(ans) = 'TinderMIX'
   return(ans)
   
