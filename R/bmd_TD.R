@@ -464,7 +464,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   if(tosave){
     grDevices::png(filename = paste(path, geneName, ".png", sep=""))
   }
-  graphics::image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","darkgreen","brown"), xlab = "Dose",ylab = "Time", main = geneName)
+  graphics::image(coord[,1], coord[,2], rotate(ternaryCopy), col = c("darkblue","brown","darkgreen"), xlab = "Dose",ylab = "Time", main = geneName)
   raster::contour(coord[,1], coord[,2], rotate(immy), add = TRUE,labcex = 1.3, col = "white")
   if(addLegend){
     graphics::legend(graphics::grconvertX(30, "device"), graphics::grconvertY(1, "device"),
