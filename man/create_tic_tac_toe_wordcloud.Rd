@@ -4,14 +4,11 @@
 \alias{create_tic_tac_toe_wordcloud}
 \title{This function perform enrichment for each gene label and compute a pathway wordcloud for every label}
 \usage{
-create_tic_tac_toe_wordcloud(Mat = res$Mat, max.words = 200,
-  scale = c(0.8, 2.5), random.order = FALSE, min.freq = 0,
-  corrType = "fdr", type_enrich = "REAC", org_enrich = "rnorvegicus",
-  pth = 0.05, sig = FALSE, mis = 0, only_annotated = FALSE)
+create_tic_tac_toe_wordcloud(Enriched_list = Enriched_list,
+  max.words = 200, scale = c(0.8, 2.5), random.order = FALSE,
+  min.freq = 0)
 }
 \arguments{
-\item{Mat}{matrix of gene labels}
-
 \item{max.words}{max number of words in wordcluds}
 
 \item{scale}{a vector of length 2 indicating the range of the size of the words.}
@@ -20,19 +17,7 @@ create_tic_tac_toe_wordcloud(Mat = res$Mat, max.words = 200,
 
 \item{min.freq}{words with frequency below min.freq will not be plotted}
 
-\item{corrType}{string specifing the algorithm used for determining the significance threshold, one of gSCS, fdr, bonferroni. Default: fdr}
-
-\item{type_enrich}{string specifying the enrichment type. Default = KEGG}
-
-\item{org_enrich}{string specifying the organism. Default = rnorvegicus}
-
-\item{pth}{numeric value specifyint the pvalue threshold. Default = 0.05}
-
-\item{sig}{whether all or only statistically significant results should be returned}
-
-\item{mis}{minimum size of functional category, smaller categories are excluded}
-
-\item{only_annotated}{statistical domain size, one of "annotated", "known"}
+\item{Mat}{matrix of gene labels}
 }
 \value{
 a list with the enriched pathways for each cluster of genes

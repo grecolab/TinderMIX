@@ -10,16 +10,16 @@ test_that("pipeline works", {
   # parameters for phenodata
   dose_index = 2
   time_point_index = 3
-  pvalFitting.adj.method = "bonferroni"
   
   #parameter for fitting
   gridSize = 50
   pvalFitting = 0.05
+  pvalFitting.adj.method = "none"
   
   # parameter BMD identification
   activity_threshold = 0.1
   BMD_response_threshold = 0.5
-  mode = "presence"
+  mode = "cumulative"
   timeLabels = c("Late","Middle","Early")
   doseLabels = c("Sensitive","Intermediate","Resilient")
   nTimeInt = 3
@@ -65,9 +65,12 @@ test_that("pipeline works", {
 
   
       ######  Example of how to plot gene map
-  geneName = "Hebp1"
+  geneName = "Ivl"
   immy = contour_res$RPGenes[[geneName]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
+  toPlot = TRUE
+  activity_threshold = 0.1
+  
   res2 = compute_BMD_IC50(immy,coord, geneName,
                           activity_threshold = activity_threshold,
                           BMD_response_threshold = BMD_response_threshold,
@@ -75,7 +78,7 @@ test_that("pipeline works", {
                           nTimeInt = nTimeInt,nDoseInt=nDoseInt,
                           timeLabels = timeLabels,
                           doseLabels = doseLabels)
-  
+  print(res2$verso)
   
   print("Step 4: Run BMD_IC50 analysis on every gene")
   res = run_all_BMD_IC50(contour_res = contour_res,

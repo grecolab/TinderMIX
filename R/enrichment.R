@@ -14,36 +14,29 @@
 #' @param scale a vector of length 2 indicating the range of the size of the words.
 #' @param random.order plot words in random order. If false, they will be plotted in decreasing frequency
 #' @param min.freq words with frequency below min.freq will not be plotted
-#' @param corrType string specifing the algorithm used for determining the significance threshold, one of gSCS, fdr, bonferroni. Default: fdr
-#' @param type_enrich string specifying the enrichment type. Default = KEGG
-#' @param org_enrich string specifying the organism. Default = rnorvegicus
-#' @param pth numeric value specifyint the pvalue threshold. Default = 0.05
-#' @param sig whether all or only statistically significant results should be returned
-#' @param mis minimum size of functional category, smaller categories are excluded
-#' @param only_annotated statistical domain size, one of "annotated", "known"
 #' @return a list with the enriched pathways for each cluster of genes
 #'
 #' @export
 
-create_tic_tac_toe_wordcloud = function(Mat = res$Mat,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0,
-                                        corrType = "fdr",type_enrich="REAC", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE){
+
+create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0){
   # library(wordcloud)
   # library(clusterProfiler)
 
-  Enriched_list = list()
-  for(i in c(1,4,7,2,5,8,3,6,9)){
-    gi = Mat[,i]
-    all_gi = names(gi[gi!=0])
-    # gi_pos = names(gi[gi>0])
-    # gi_neg = names(gi[gi<0])
-
-    EP_all = compute_pathways(geneList = all_gi,corrType = corrType,type_enrich=type_enrich, org_enrich = org_enrich,pth = pth,sig = sig,mis = mis,only_annotated=only_annotated )
-    # toRem = which(EP_all$Description %in% "Reactome")
-    # if(length(toRem)>0) EP_all = EP_all[-toRem,]
-
-    Enriched_list[[colnames(Mat)[i]]] = EP_all
-
-  }
+  # Enriched_list = list()
+  # for(i in c(1,4,7,2,5,8,3,6,9)){
+  #   gi = Mat[,i]
+  #   all_gi = names(gi[gi!=0])
+  #   # gi_pos = names(gi[gi>0])
+  #   # gi_neg = names(gi[gi<0])
+  # 
+  #   EP_all = compute_pathways(geneList = all_gi,corrType = corrType,type_enrich=type_enrich, org_enrich = org_enrich,pth = pth,sig = sig,mis = mis,only_annotated=only_annotated )
+  #   # toRem = which(EP_all$Description %in% "Reactome")
+  #   # if(length(toRem)>0) EP_all = EP_all[-toRem,]
+  # 
+  #   Enriched_list[[colnames(Mat)[i]]] = EP_all
+  # 
+  # }
 
 
  par(mfrow = c(3,3), oma = c(0,0,0,0) + 0.1, mar = c(0,0,0,0) + 0.1)
