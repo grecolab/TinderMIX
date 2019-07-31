@@ -14,12 +14,13 @@
 #' @param scale a vector of length 2 indicating the range of the size of the words.
 #' @param random.order plot words in random order. If false, they will be plotted in decreasing frequency
 #' @param min.freq words with frequency below min.freq will not be plotted
+#' @param toplot boolean specifying if plotting wordcloud
 #' @return a list with the enriched pathways for each cluster of genes
 #'
 #' @export
 
 
-create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0){
+create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0,toplot=TRUE){
   # library(wordcloud)
   # library(clusterProfiler)
 
@@ -40,7 +41,10 @@ create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words 
 
 
  par(mfrow = c(3,3), oma = c(0,0,0,0) + 0.1, mar = c(0,0,0,0) + 0.1)
-
+ WCDFList = list()
+ WCDF = c()
+ EL = c()
+ 
   for(i in 1:length(Enriched_list)){
     EP_all = Enriched_list[[i]]
     if(nrow(EP_all)==0){
@@ -48,16 +52,23 @@ create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words 
     }else{
       #d = data.frame(word = substring(text = EP_all$Description,first = 1,last = 20), freq = log(EP_all$pValueAdj) * -2)
       d = data.frame(word = EP_all$Description, freq = log(EP_all$pValueAdj) * -2)
-
-      # set.seed(1234)
-      wordcloud::wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
-                max.words=max.words, random.order=random.order,
-                colors=brewer.pal(8, "Dark2"), scale = scale)
+      WCDFList[[i]] = d
+      WCDF = rbind(WCDF, cbind(d, names(Enriched_list)[i]))
+      
+      EL = rbind(EL, data.frame(word = EP_all$Description, pValueAdj = EP_all$pValueAdj, label = names(Enriched_list)[i]))
+       
+      if(toplot){
+        # set.seed(1234)
+        wordcloud::wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
+                             max.words=max.words, random.order=random.order,
+                             colors=brewer.pal(8, "Dark2"), scale = scale)
+        
+      }
 
     }
   }
-
-  return(Enriched_list)
+ colnames(WCDF)[3] = "label"
+  return(list(Enriched_list=Enriched_list,WCDFList=WCDFList,WCDF=WCDF,EL=EL))
 }
 
 #'
@@ -101,17 +112,23 @@ create_pathway_prototypes = function(enrichedPath = enrichedPath, annIDs, contou
     
     genes = unlist(strsplit(x = enrichedPath[annIDs[i],2],split = ","))
     pt = create_prot(RPGenes = RPGenes, genes=genes)
-    cor_pt = mean(abs(stats::cor(GenesMap[,genes],method="pearson")))
-    randomCor = c()
-    pb = txtProgressBar(min = 1, max = nPerm, style = 3)
-    for(permIdx in 1:nPerm){
-      randomCor = c(randomCor, mean(abs(stats::cor(GenesMap[,sample(x = 1:ncol(GenesMap),size = length(genes))],method="pearson"))))
-      setTxtProgressBar(pb,permIdx)
-    }
-    close(pb)
-    pval_pt = 1 - sum(randomCor < cor_pt) / length(randomCor)
-    protInfo = list(prototype = pt, correlation = cor_pt, pvalue = pval_pt)
     
+    if(length(genes)>1){
+      cor_pt = mean(abs(stats::cor(GenesMap[,genes],method="pearson")))
+      randomCor = c()
+      pb = txtProgressBar(min = 1, max = nPerm, style = 3)
+      for(permIdx in 1:nPerm){
+        randomCor = c(randomCor, mean(abs(stats::cor(GenesMap[,sample(x = 1:ncol(GenesMap),size = length(genes))],method="pearson"))))
+        setTxtProgressBar(pb,permIdx)
+      }
+      close(pb)
+      pval_pt = 1 - sum(randomCor < cor_pt) / length(randomCor)
+      protInfo = list(prototype = pt, correlation = cor_pt, pvalue = pval_pt)
+    }else{
+      protInfo = list(prototype = pt, correlation = NA, pvalue = NA)
+      
+    }
+
     Pathways_prot[[enrichedPath[annIDs[i],"Description"]]] = protInfo
   }
   

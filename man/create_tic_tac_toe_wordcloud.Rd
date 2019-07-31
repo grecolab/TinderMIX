@@ -6,7 +6,7 @@
 \usage{
 create_tic_tac_toe_wordcloud(Enriched_list = Enriched_list,
   max.words = 200, scale = c(0.8, 2.5), random.order = FALSE,
-  min.freq = 0)
+  min.freq = 0, toplot = TRUE)
 }
 \arguments{
 \item{max.words}{max number of words in wordcluds}
@@ -16,6 +16,8 @@ create_tic_tac_toe_wordcloud(Enriched_list = Enriched_list,
 \item{random.order}{plot words in random order. If false, they will be plotted in decreasing frequency}
 
 \item{min.freq}{words with frequency below min.freq will not be plotted}
+
+\item{toplot}{boolean specifying if plotting wordcloud}
 
 \item{Mat}{matrix of gene labels}
 }

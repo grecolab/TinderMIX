@@ -90,15 +90,60 @@ test_that("pipeline works", {
                          tosave=FALSE, addLegend = FALSE, path = ".",
                          relGenes = contour_res$ggenes, toPlot = FALSE)
   
+  Mat = res$Mat
+  Enriched_list = list()
+  for(i in c(3,6,9,2,5,8,1,4,7)){
+    gi = Mat[,i]
+    all_gi = names(gi[gi!=0])
+    # gi_pos = names(gi[gi>0])
+    # gi_neg = names(gi[gi<0])
+
+    EP_all = compute_pathways(geneList = all_gi,corrType = corrType,type_enrich=type_enrich, org_enrich = org_enrich,pth = pth,sig = sig,mis = mis,only_annotated=only_annotated )
+    # toRem = which(EP_all$Description %in% "Reactome")
+    # if(length(toRem)>0) EP_all = EP_all[-toRem,]
+
+    Enriched_list[[colnames(Mat)[i]]] = EP_all
+
+  }
+  
   print("Step 5: compute pathways for every gene label and plot wordcloud")
-  mat_enrich_res = create_tic_tac_toe_wordcloud(Mat = res$Mat,max.words = 200,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0,
-                                          corrType = "fdr",type_enrich="REAC", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE)
-    
+  mat_enrich_res = create_tic_tac_toe_wordcloud(Enriched_list = Enriched_list, max.words = 400,scale = c(0.8,2.5),random.order=FALSE,min.freq = 0)
+  
+  library(reshape2)
+  ELM = acast(mat_enrich_res$EL, word~label, value.var="pValueAdj")
+  ELM[is.na(ELM)] = 1
+  toRem = which(rownames(ELM) %in% "KEGG pathways")
+  if(length(toRem)>0){
+    ELM = ELM[-toRem,]
+  }
+  
+  
+  library(heatmaply)
+  heatmaply(t(ELM), k_col = 2, k_row = 3, dendrogram = "none") %>% 
+    layout(margin = list(l = 130, b = 40))
+  
+  mat_enrich_res$WCDF$freq = mat_enrich_res$WCDF$freq/10
+  
+  toRem = which(mat_enrich_res$WCDF$word %in% "KEGG pathways")
+  if(length(toRem)>0){
+    mat_enrich_res$WCDF = mat_enrich_res$WCDF[-toRem,]
+  }
+  library(ggwordcloud)
+  set.seed(42)
+  ggplot(
+    mat_enrich_res$WCDF,
+    aes(label = word, size = freq/10)
+  ) +
+    geom_text_wordcloud_area() +
+    scale_size_area(max_size = 10) +
+    theme_minimal() +
+    facet_wrap(~label)
+  
   print("Step 5 bis: compute pathways enriched from the dose-response genes")
       #####  compute pathways
   enrichedPath = compute_pathways(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", org_enrich = "rnorvegicus",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE )
       #####  create prototype for selected pathways (annIDs) and compute mean gene correlation and pvalue with permutation test
-  PatProt = create_pathway_prototypes(enrichedPath = enrichedPath, annIDs = c("04973"),contour_res = contour_res,nPerm = 100)
+  PatProt = create_pathway_prototypes(enrichedPath = enrichedPath, annIDs = c("04010"),contour_res = contour_res,nPerm = 100)
 
       ##### example on how to plot pathway prototype
   immy = PatProt$`Carbohydrate digestion and absorption`$prototype[[3]]
