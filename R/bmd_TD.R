@@ -2,6 +2,7 @@
 #' This function assigns a label to contour map
 #'
 #' @param map matrix containing the z-map for a specific gene or cluster prototype
+#' @param BMD matrix containing the dose-response area
 #' @param th a threshold to define the portion of dose-response area to be identified as labels for the gene.
 #' @param nDoseInt number of dose related breaks in the gene label's table. default is 3
 #' @param nTimeInt number of time related breaks in the gene label's table. default is 3
@@ -18,7 +19,8 @@
 #'
 #' @export
 #'
-label2DMap = function(map, coord, myContour, th=0.95, mode = "cumulative", nDoseInt=3, nTimeInt=3, doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"), toplot = FALSE){
+label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseInt=3, nTimeInt=3, doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"), toplot = FALSE){
+  
   mapSize = ncol(map)
   rangesDoses = cut(seq(5, 20, length.out=mapSize),nDoseInt)
   rangesTimes = cut(seq(5, 20, length.out=mapSize),nTimeInt)
@@ -52,11 +54,21 @@ label2DMap = function(map, coord, myContour, th=0.95, mode = "cumulative", nDose
   colnames(ttt) = doseLabels
   for(i in 1:nTimeInt){
     for(j in 1:nDoseInt){
-      
       blockMat = matrix(0,mapSize,mapSize)
       blockMat[idsTimes[[i]],idsDoses[[j]]]=1
-      
       ttt[i,j] = sum(blockMat * CM)/nrow(myContour)
+    }
+  }
+  
+  BMD[is.na(BMD)] = 0
+  
+  # percentage of coverage of each area by the BMD matrix
+  ttt_area = matrix(0, nrow = nTimeInt,ncol = nDoseInt)
+  rownames(ttt) = timeLabels
+  colnames(ttt) = doseLabels
+  for(i in 1:nTimeInt){
+    for(j in 1:nDoseInt){
+      ttt_area[i,j] = sum(BMD[idsTimes[[i]],idsDoses[[j]]])/(length(idsTimes[[i]]) * length(idsTimes[[j]]))
     }
   }
   
@@ -70,9 +82,22 @@ label2DMap = function(map, coord, myContour, th=0.95, mode = "cumulative", nDose
       cumulativa = cumulativa + ttt[idx[1], idx[2]]
       ttt2[idx[1], idx[2]]=0
     }
-  }else{
+  }if(mode == "presence"){
     ttt_lab = 0 * ttt
     ttt_lab[ttt>0] = 1
+  }else{
+    ttt_sum = ttt + ttt_area
+    idx = which(ttt_sum == max(ttt_sum), arr.ind = T)
+    ttt_lab = ttt_sum * 0
+    
+    if(nrow(idx) == 1){
+      ttt_lab[idx[1,1],idx[1,2]] = 1
+    }else{
+      mm = matrix(c(7,8,9,4,5,6,1,2,3),3,3)
+      ttt_sum = ttt_sum + mm
+      idx = which(ttt_sum == max(ttt_sum), arr.ind = T)
+      ttt_lab[idx[1,1],idx[1,2]] = 1
+    }
   }
   
   
@@ -453,7 +478,6 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
         toSetAsZero = c(toSetAsZero,myContour[i,1])
         goodIdx=c(goodIdx,i)
       }
-        
     }
   }
   
@@ -503,13 +527,15 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
     return(ans)
   }
   
-  restt0 = label2DMap(map = ternaryIMBMD,coord=coord,myContour = myContour,th = BMD_response_threshold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
   
   BMD = ternaryIMBMD
   BMD[BMD==0] = NA
   if(toPlot){
     graphics::image(coord[,1], coord[,2],rotate(BMD), col = grDevices::adjustcolor( "yellow", alpha.f = 0.2), add = T)
   }
+  
+  restt0 = label2DMap(map = ternaryIMBMD,BMD = BMD, coord=coord,myContour = myContour,th = BMD_response_threshold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
+  
   
   ddd = cbind(coord[myContour[,2],1],coord[(gridSize + 1)-myContour[,1],2])
   colnames(ddd) = c("Dose","Time")
