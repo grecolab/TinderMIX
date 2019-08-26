@@ -82,7 +82,8 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
       cumulativa = cumulativa + ttt[idx[1], idx[2]]
       ttt2[idx[1], idx[2]]=0
     }
-  }if(mode == "presence"){
+  }
+  if(mode == "presence"){
     ttt_lab = 0 * ttt
     ttt_lab[ttt>0] = 1
   }else{
