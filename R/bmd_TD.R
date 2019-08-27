@@ -114,15 +114,6 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
     idx = which(ttt_sum == max(ttt_sum), arr.ind = T)
     ttt_lab = ttt_sum * 0
     ttt_lab[idx[1,1],idx[1,2]] = 1
-    
-    # if(nrow(idx) == 1){
-    #   ttt_lab[idx[1,1],idx[1,2]] = 1
-    # }else{
-    #   mm = matrix(c(7,8,9,4,5,6,1,2,3),3,3) / 9
-    #   ttt_sum = ttt_sum + mm
-    #   idx = which(ttt_sum == max(ttt_sum), arr.ind = T)
-    #   ttt_lab[idx[1,1],idx[1,2]] = 1
-    # }
   }
   
   
