@@ -19,7 +19,7 @@ test_that("pipeline works", {
   # parameter BMD identification
   activity_threshold = 0.1
   BMD_response_threshold = 0.5
-  mode = "cumulative"
+  mode = "most_left"
   timeLabels = c("Late","Middle","Early")
   doseLabels = c("Sensitive","Intermediate","Resilient")
   nTimeInt = 3
@@ -65,7 +65,7 @@ test_that("pipeline works", {
 
   
       ######  Example of how to plot gene map
-  geneName = "Ivl"
+  geneName = "Asf1a"
   immy = contour_res$RPGenes[[geneName]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   toPlot = TRUE
@@ -77,7 +77,7 @@ test_that("pipeline works", {
                           mode = mode,
                           nTimeInt = nTimeInt,nDoseInt=nDoseInt,
                           timeLabels = timeLabels,
-                          doseLabels = doseLabels)
+                          doseLabels = doseLabels,toPlot = T)
   print(res2$verso)
   
   print("Step 4: Run BMD_IC50 analysis on every gene")

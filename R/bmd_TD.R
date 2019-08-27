@@ -83,10 +83,31 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
       ttt2[idx[1], idx[2]]=0
     }
   }
+  if(mode == "most_left"){ # identify the area that is closer to the (0,0) corner
+    iid = which(myContour[,2] == min(myContour[,2]), arr.ind = T)
+    myContour2 = matrix(0, nrow = length(iid), ncol = ncol(myContour))
+    myContour2[,1] = myContour[iid,1]
+    myContour2[,2] = myContour[iid,2]
+    myContour = myContour2
+    
+    iid = which(myContour[,1] == max(myContour[,1]), arr.ind = T)[1]
+    
+    iid = myContour[iid,]
+    
+    ri = which(unlist(lapply(idsTimes,FUN = function(elem){
+      iid[1] %in% elem
+    })))
+    ci = which(unlist(lapply(idsDoses,FUN = function(elem){
+      iid[2] %in% elem
+    })))
+    ttt_lab = ttt * 0
+    ttt_lab[ri, ci] = 1
+  }
   if(mode == "presence"){
     ttt_lab = 0 * ttt
     ttt_lab[ttt>0] = 1
-  }else{
+  }
+  if(mode == "mix"){ # mix: takes into account of the number of points from the yellow label, the coverage of the area and the position of the area
     mm = matrix(c(7,8,9,4,5,6,1,2,3),3,3) / 9
     
     ttt_sum = ttt + ttt_area + mm
@@ -127,7 +148,7 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
   # 
   # ttt = ttt
   
-  return(list(tic_tac_toe = ttt, ttt_label = ttt_lab))
+  return(list(tic_tac_toe = ttt, ttt_label = ttt_lab, ttt_area=ttt_area))
   
 }
 
