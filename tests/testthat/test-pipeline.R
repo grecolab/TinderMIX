@@ -14,7 +14,7 @@ test_that("pipeline works", {
   #parameter for fitting
   gridSize = 50
   pvalFitting = 0.05
-  pvalFitting.adj.method = "none"
+  pvalFitting.adj.method = "fdr"
   
   # parameter BMD identification
   activity_threshold = 0.1
@@ -61,11 +61,14 @@ test_that("pipeline works", {
                                                 time_point_index =time_point_index ,
                                                 gridSize = gridSize,
                                                 pvalFitting = pvalFitting,
-                                                pvalFitting.adj.method=pvalFitting.adj.method))
+                                                pvalFitting.adj.method=pvalFitting.adj.method,
+                                                logScale = TRUE,modelSelection = 1:3))
 
   
+  plot3d(toPlot = list(contour_res$RPGenes$Zufsp[[1]],contour_res$RPGenes$Zufsp[[2]],contour_res$RPGenes$Zufsp[[3]]),logScale = TRUE, DF = contour_res$DFList$Zufsp)
+  
       ######  Example of how to plot gene map
-  geneName = "Asf1a"
+  geneName = "Cfp"
   immy = contour_res$RPGenes[[geneName]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   toPlot = TRUE
@@ -91,6 +94,37 @@ test_that("pipeline works", {
                          relGenes = contour_res$ggenes, toPlot = FALSE)
   
   Mat = res$Mat
+  
+  par(mfrow = c(2,2))
+  
+  # dose -
+  # tempo + 
+  g_dn_tp = names(res$geneDegree[res$geneDegree>90 & res$geneDegree<=180])
+  barplot(colSums(abs(Mat[g_dn_tp,])),las = 2, ylim = c(0,600))
+  
+  # dose + 
+  # tempo + 
+  g_dp_tp = names(res$geneDegree[res$geneDegree>0 & res$geneDegree<=90])
+  barplot(colSums(abs(Mat[g_dp_tp,])), las = 2, ylim = c(0,600))
+  
+  # dose -
+  # tempo - 
+  g_dn_tn = names(res$geneDegree[res$geneDegree<=-90 & res$geneDegree>=-180])
+  barplot(colSums(abs(Mat[g_dn_tn,])),las = 2, ylim = c(0,600))
+  
+  # dose +
+  # tempo - 
+  g_dp_tn = names(res$geneDegree[res$geneDegree<=0 & res$geneDegree>-90])
+  barplot(colSums(abs(Mat[g_dp_tn,])),las = 2, ylim = c(0,600))
+  
+  library(xlsx)
+  library(ImportExport)
+  LL = list("NegDos_PosTime" = g_dn_tp,
+            "PosDos_PosTime" = g_dp_tp,
+            "NegDos_NegTime" = g_dn_tn,
+            "PosDos_NegTime" = g_dp_tn)
+  excel_export(LL,"dose_time.xlsx",table_names=names(LL))
+  
   Enriched_list = list()
   for(i in c(3,6,9,2,5,8,1,4,7)){
     gi = Mat[,i]
@@ -136,7 +170,7 @@ test_that("pipeline works", {
   ) +
     geom_text_wordcloud_area() +
     scale_size_area(max_size = 10) +
-    theme_minimal() +
+ 
     facet_wrap(~label)
   
   print("Step 5 bis: compute pathways enriched from the dose-response genes")
@@ -147,7 +181,7 @@ test_that("pipeline works", {
 
       ##### example on how to plot pathway prototype
   immy = PatProt$`Carbohydrate digestion and absorption`$prototype[[3]]
-  coord = cbind(PatProt$`Carbohydrate digestion and absorption`$prototype[[1]],PatProt$`Carbohydrate digestion and absorption`$prototype[[2]])
+  coord = cbind(PatProt$`C   theme_minimal() +arbohydrate digestion and absorption`$prototype[[1]],PatProt$`Carbohydrate digestion and absorption`$prototype[[2]])
   res2 = compute_BMD_IC50(immy,coord, "Carbohydrate digestion and absorption",
                           activity_threshold = activity_threshold,
                           BMD_response_threshold = BMD_response_threshold,

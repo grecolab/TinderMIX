@@ -25,10 +25,14 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
   rangesDoses = cut(seq(5, 20, length.out=mapSize),nDoseInt)
   rangesTimes = cut(seq(5, 20, length.out=mapSize),nTimeInt)
   
+  # print(rangesDoses)
+  # print(rangesTimes)
+  
   idsDoses = list()
   for(i in 1:nDoseInt){
     idsDoses[[i]] = which(rangesDoses==levels(rangesDoses)[i])
     if(toplot){
+      print(exp(coord[idsDoses[[i]],1][length(idsDoses[[i]])]))
       graphics::abline(v = coord[idsDoses[[i]],1][length(idsDoses[[i]])], lty = 2)
     }
   }
@@ -37,6 +41,7 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
   for(i in 1:nTimeInt){
     idsTimes[[i]] = which(rangesTimes==levels(rangesTimes)[i])
     if(toplot){
+      print(exp(coord[idsTimes[[i]],2][length(idsTimes[[i]])]))
       graphics::abline(h = coord[idsTimes[[i]],2][length(idsTimes[[i]])], lty = 2)
     }
     
@@ -217,6 +222,7 @@ bwtraceboundary= function(ternaryIMBMD){
 }
 
 rotate <- function(x) t(apply(x, 2, rev))
+rad2deg <- function(rad) {(rad * 180) / (pi)}
 
 #'
 #' This function run the compute_BMD_IC50 for all genes and return a matrix with label associated to every gene
@@ -256,9 +262,11 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
   Map = list()
   goodGenes = c()
   GeneRes = list()
+  geneDegree = c()
   
   pb = txtProgressBar(min = 1, max = length(contour_res$RPGenes), style = 3)
   for(i in 1:length(contour_res$RPGenes)){
+
     geneName = names(contour_res$RPGenes)[i]
     
     if((geneName %in% relGenes)==FALSE)
@@ -273,6 +281,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
       if(is.null(res$verso)==FALSE){
         labels =  as.vector(res$label$ttt_label)
         Map[[geneName]] =  c(labels,res$verso)
+        geneDegree = c(geneDegree,res$timedosedegree)
         goodGenes = c(goodGenes,geneName)
       }
     }, error = function(e) {
@@ -296,9 +305,10 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
     labels[[i]] = paste(colnames(Mat)[Mat[i,]!=0], collapse = " ")
   }
   
-  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes, labels=labels))
+  names(geneDegree) = rownames(Mat)
+  
+  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes, geneDegree=geneDegree,labels=labels))
 }
-
 
 #'
 #' This function identify the BMD area and the IC50 value in the time and dose maps 
@@ -330,12 +340,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
                             doseLabels = c("Late","Middle","Early"), timeLabels = c("Sensitive","Intermediate","Resilient"), toPlot = TRUE,addLegend = TRUE, tosave=FALSE, path = ".", mode = "cumulative"){
   gridSize = nrow(immy)
   immy = rotate(rotate(rotate(immy)))
-  
   activity_threshold = log2((10 + (10*activity_threshold))/10)
   
   #activity_threshold = log2((10 + (10*0.01))/10)
-  
-  
   #activity_threshold = quantile(immy, activity_threshold)
   
   if(max(abs(immy))<activity_threshold){
@@ -376,13 +383,13 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
     ternaryIMBMD[abs(immy)>=activity_threshold & gx>=0]=1; # GREEN: gradient component in dose direction positive, i.e. dose increases
     ternaryIMBMD[abs(immy)>=activity_threshold & gx<0]=2; # YELLOW: gradient component in dose direction negative, i.e. dose decreases
     ternaryIMBMD[abs(immy)<activity_threshold]=0; # BLUE: again non-eligible region
-     #image(coord[,1], coord[,2],rotate(ternaryIMBMD))
+    #  image(coord[,1], coord[,2],rotate(ternaryIMBMD))
     # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
     # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   }
   
   # image(coord[,1], coord[,2],rotate(ternaryIMBMD))
-  # contour(coord[,1], coord[,2],immy, col="black", add = TRUE)
+  # contour(coord[,1], coord[,2],rotate(immy), col="black", add = TRUE)
   # quiver(X,Y, gx, gy, scale = 0.5, col="blue")
   
   pixelsGreen = sum(ternaryIMBMD==1);
@@ -458,10 +465,26 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
     nOnes = sum(ternaryIMBMD[i,])
     if(nOnes>0){
       numbers = which(ternaryIMBMD[i,]==1)
-      n = min(numbers)
-      if(abs(sum(numbers - n:gridSize))>0){
-        toSetAsZero=c(toSetAsZero, i)
+      
+      consecNum = split(numbers, cumsum(c(1, diff(numbers) != 1)))
+      iidx = which(unlist(lapply(consecNum, FUN = function(elem){gridSize %in% elem}))==FALSE)
+      
+      if(length(iidx)>0){
+        ternaryIMBMD[i,unlist(consecNum[iidx])] = 0
       }
+      
+      n = min(numbers)
+      
+      # #these are the columns that we need in order to have a dose-response effect
+      # allGrid = n:gridSize 
+      # #if not all of them are included, then we remove that line from the region
+      # if(sum(allGrid %in% numbers) < length(allGrid)){
+      #   toSetAsZero=c(toSetAsZero, i)
+      # }
+      
+      # if(abs(sum(numbers - n:gridSize))>0){
+      #   toSetAsZero=c(toSetAsZero, i)
+      # }
     }
   }
   
@@ -490,7 +513,7 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   goodIdx = c()
   for(i in 1:nrow(myContour)){
     if(myContour[i,2]>1){
-      if(badDigit %in% ternaryCopy[myContour[i,1],1:myContour[i,2]-1]){
+      if(badDigit %in% ternaryIMBMD[myContour[i,1],1:myContour[i,2]-1]){
         toSetAsZero = c(toSetAsZero,myContour[i,1])
         goodIdx=c(goodIdx,i)
       }
@@ -550,6 +573,21 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
     graphics::image(coord[,1], coord[,2],rotate(BMD), col = grDevices::adjustcolor( "yellow", alpha.f = 0.2), add = T)
   }
   
+  bmd_area_idx = which(BMD==1,arr.ind = T)
+
+  gradi = c()
+  modL = c()
+  for(i in 1:nrow(bmd_area_idx)){
+    yc = gy[bmd_area_idx[i,1],bmd_area_idx[i,2]]
+    xc = gx[bmd_area_idx[i,1],bmd_area_idx[i,2]]
+    dg = rad2deg(atan2(yc, xc))
+    md = sqrt(yc^2 + xc^2)
+    gradi = c(gradi, dg)
+    modL = c(modL,md)
+  }
+  
+  tdd = (1/sum(modL)) * sum(gradi * modL)
+
   restt0 = label2DMap(map = ternaryIMBMD,BMD = BMD, coord=coord,myContour = myContour,th = BMD_response_threshold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
   
   
@@ -602,6 +640,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   ans$bmd = ddd
   ans$IC50 = ddd2
   ans$geneName = geneName
+  ans$timedosedegree = tdd
+  ans$gradi = gradi
+  ans$modL = modL
   class(ans) = 'TinderMIX'
   return(ans)
   

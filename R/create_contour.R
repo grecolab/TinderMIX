@@ -10,29 +10,37 @@
 #' @param dose_index numeric value specifing the column of the phenodata table containing the doses
 #' @param time_point_index numeric value specifing the column of the phenodata table containing the time points
 #' @param gridSize numeric value specifing size of the z-grid
+#' @param logScale boolean specifying if the fitting is performed by using the dose and time in log or linear scale
+#' @param modelSelection is a vector of indices specifying which model to fit. 1:linear 2: poly2, 3: poly3
 #' @return a list with list with estimated contour objects, 3D fitted objects, fitting statistics and feature values for time and dose
 #' \item{GenesMap}{a matrix with the z-maps computed for each gene}
 #' \item{RPGenes}{a list with the 3D fitted objects}
 #' \item{Statis}{a matrix witht the fitting statistics: PValue,Adj.R.Square,RMSE}
 #' \item{DFList}{a list with the data used for the fitting}
-#'
+#' \ite{ModList}{a list with the fitted models}
 #' @export
 #'
 
 #modelType string showing the model to fit. Possible options: poly2 and loess 
 
-create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50, pvalFitting.adj.method = "fdr",pvalFitting=0.05){ 
+create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50, 
+                          pvalFitting.adj.method = "fdr",pvalFitting=0.05, logScale = FALSE,
+                          modelSelection = c(1,2)){  #models is a vector of indices specifying which model to fit. 1:linear 2: poly2, 3: poly3
   GenesMap = matrix(NA, ncol = length(responsive_genes), nrow = (gridSize*gridSize) )
   colnames(GenesMap) = responsive_genes
   RPGenes = list()
   DFList = list()
-
-  Stats = matrix(0, nrow = length(responsive_genes), ncol = 3)
+  ModList = list()
+  
+  Stats = matrix(0, nrow = length(responsive_genes), ncol = 6)
   rownames(Stats) = responsive_genes
-  colnames(Stats) = c("PValue","Adj.R.Square","RMSE")
+  colnames(Stats) = c("PValue","Adj.R.Square","RMSE","BIC","AIC", "OptMod")
+  
   index = 1
   pb = txtProgressBar(min = 1, max = length(responsive_genes), style = 3)
+  
   for(g in responsive_genes){
+    
     Exp = reshape::melt(exp_data[g,])
     Exp = cbind(rownames(Exp), Exp)
     colnames(Exp)[1] = "variable"
@@ -43,33 +51,112 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
     Exp = as.data.frame(Exp)
     Exp$Dose = as.numeric(as.vector(Exp$Dose))
     Exp$Time = as.numeric(as.vector(Exp$Time))
-    model <- stats::lm(Exp ~ Dose * Time + I(Dose^2) + I(Time^2),data = Exp)
     
-    # if(modelType == "poly2"){
-    #   model <- stats::lm(Exp ~ Dose * Time + I(Dose^2) + I(Time^2),data = Exp)
-    # }
-    # if(modelType == "loess"){
-    #   model = loess(Exp ~ Dose + Time,data = Exp)
-    # }
-
-    f <- summary(model)$fstatistic
-    p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
-    adj.r.square = summary(model)$adj.r.squared
-    RSS <- c(crossprod(model$residuals))
-    MSE <- RSS / length(model$residuals)
-    RMSE <- sqrt(MSE)
-    Stats[index,] = c(p, adj.r.square,RMSE)
-
-    x <-range(as.numeric(as.vector(Exp$Dose)))
-    x <- seq(x[1], x[2], length.out=gridSize)
-    y <- range(as.numeric(as.vector(Exp$Time)))
-    y <- seq(y[1], y[2], length.out=gridSize)
-    z <- outer(x,y, function(Dose,Time) stats::predict(model, data.frame(Dose,Time)))
-
+    if(logScale){
+      Exp$Dose = log(Exp$Dose)
+      Exp$Time = log(Exp$Time)
+      
+      ModList = list()
+      lin_model <- stats::lm(Exp ~ Dose + Time,data = Exp)
+      poly2_model <- stats::lm(Exp ~ I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time, data = Exp)
+      poly3_model <- stats::lm(Exp ~ I(Dose^3) + I(Dose^2 * Time) + I(Dose * Time^2) + I(Time^3) + I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time  ,data = Exp)
+      
+      ModList[["linear"]] = lin_model
+      ModList[["poly2"]] = poly2_model
+      ModList[["poly3"]] = poly3_model
+      
+      ModList = ModList[modelSelection]
+      
+      SingleStats = c()
+      
+      for(model in ModList){
+        f <- summary(model)$fstatistic
+        p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
+        adj.r.square = summary(model)$adj.r.squared
+        RSS <- c(crossprod(model$residuals))
+        MSE <- RSS / length(model$residuals)
+        RMSE <- sqrt(MSE)
+        BICmod = stats::BIC(model)
+        AICmod = stats::AIC(model)
+        
+        SingleStats = rbind(SingleStats, c(p, adj.r.square,RMSE, BICmod, AICmod))
+      }
+      
+      colnames(SingleStats) = c("PValue","Adj.R.Square","RMSE","BIC","AIC")
+      rownames(SingleStats) = names(ModList)
+      
+      optIdx = which.min(SingleStats[,"AIC"])
+      optModel = ModList[[optIdx]]
+      
+      Stats[index,] = c(SingleStats[optIdx,], names(ModList)[optIdx])
+      
+      x1 <-range(as.numeric(as.vector(exp(Exp$Dose))))
+      x1 <- seq(x1[1], x1[2], length.out=gridSize)
+      y1 <- range(as.numeric(as.vector(exp(Exp$Time))))
+      y1 <- seq(y1[1], y1[2], length.out=gridSize)
+      
+      x <-range(as.numeric(as.vector(Exp$Dose)))
+      x <- seq(x[1], x[2], length.out=gridSize)
+      y <- range(as.numeric(as.vector(Exp$Time)))
+      y <- seq(y[1], y[2], length.out=gridSize)
+      
+      z <- outer(x,y, function(Dose,Time) stats::predict(optModel, data.frame(Dose,Time)))
+      List3d=list(x1,y1,z)
+      #plot3d(toPlot = List3d,logScale = TRUE, DF = Exp)
+      
+    }else{
+      ModList = list()
+      lin_model <- stats::lm(Exp ~ Dose + Time,data = Exp)
+      poly2_model <- stats::lm(Exp ~ I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time, data = Exp)
+      poly3_model <- stats::lm(Exp ~ I(Dose^3) + I(Dose^2 * Time) + I(Dose * Time^2) + I(Time^3) + I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time  ,data = Exp)
+      
+      ModList[["linear"]] = lin_model
+      ModList[["poly2"]] = poly2_model
+      ModList[["poly3"]] = poly3_model
+      ModList = ModList[modelSelection]
+      
+      SingleStats = c()
+      
+      for(model in ModList){
+        f <- summary(model)$fstatistic
+        p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
+        adj.r.square = summary(model)$adj.r.squared
+        RSS <- c(crossprod(model$residuals))
+        MSE <- RSS / length(model$residuals)
+        RMSE <- sqrt(MSE)
+        BICmod = stats::BIC(model)
+        AICmod = stats::AIC(model)
+        
+        SingleStats = rbind(SingleStats, c(p, adj.r.square,RMSE, BICmod, AICmod))
+      }
+      
+      colnames(SingleStats) = c("PValue","Adj.R.Square","RMSE","BIC","AIC")
+      rownames(SingleStats) = names(ModList)
+      
+      optIdx = which.min(SingleStats[,"AIC"])
+      optModel = ModList[[optIdx]]
+      
+      Stats[index,] = c(SingleStats[optIdx,], names(ModList)[optIdx])
+      
+      x <-range(as.numeric(as.vector(Exp$Dose)))
+      x <- seq(x[1], x[2], length.out=gridSize)
+      y <- range(as.numeric(as.vector(Exp$Time)))
+      y <- seq(y[1], y[2], length.out=gridSize)
+      z <- outer(x,y, function(Dose,Time) stats::predict(optModel, data.frame(Dose,Time)))
+      List3d=list(x,y,z)
+      
+      #plot3d(toPlot = List3d,logScale = FALSE, DF = Exp)
+      
+    }
+    
     #GenesMap = cbind(GenesMap,as.vector(z)) # I want to compute the distance by the genes based on the mapping z
     GenesMap[,g] =  as.vector(z)
-    RPGenes[[g]] = list(x,y,z)
+    RPGenes[[g]] = List3d
     DFList[[g]] = Exp
+    ModList[[g]] = optModel
+    
+    p = plot3d(toPlot = list(x,y,z),DF = Exp)
+    p
 
     setTxtProgressBar(pb,index)
     index = index + 1
@@ -77,12 +164,13 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
   colnames(GenesMap) = responsive_genes#responsive_genes
   close(pb)
   
-  SST = Stats
-  adj.pval = p.adjust(SST[,1],method = pvalFitting.adj.method)
+  SST = as.data.frame(Stats)
+  
+  adj.pval = p.adjust(as.numeric(as.vector(SST[,1])),method = pvalFitting.adj.method)
   SST = cbind(adj.pval,SST)
   ggenes = rownames(SST)[SST[,1]<pvalFitting]
-
-  return(list(GenesMap=GenesMap, RPGenes = RPGenes,Stats=Stats,DFList=DFList,ggenes=ggenes))
+  Stats = SST
+  return(list(GenesMap=GenesMap, RPGenes = RPGenes,Stats=Stats,DFList=DFList,ggenes=ggenes, ModList=ModList))
 }
 
 plot_contour_plot = function(immy, coord,geneName){
@@ -111,17 +199,44 @@ plot_contour_plot = function(immy, coord,geneName){
 #' @export
 #'
 #'
-plot3d = function(toPlot = list(x,y,z), DF){
-  p = plot_ly(x=~toPlot[[1]], y=~toPlot[[2]], z=~t(toPlot[[3]]),
-              colors = c("#f5cb11", "#b31d83"),type="surface") %>%
-    add_trace(data=DF, x=DF$Dose, y=DF$Time, z=DF$Exp, mode="markers", type="scatter3d",
-              marker = list(opacity=0.7, symbol=105)) %>%
-    layout(scene = list(
-      aspectmode = "manual",
-      aspectratio = list(x=1, y=1, z=1),
-      xaxis = list(title = "Dose"),
-      yaxis = list(title = "Time"),
-      zaxis = list(title = "Exp")))
+plot3d = function(toPlot = list(x,y,z), DF, logScale = FALSE){
+  
+  if(logScale){
+    p = plot_ly(x=~toPlot[[1]], y=~toPlot[[2]], z=~t(toPlot[[3]]),
+                colors = c("#f5cb11", "#b31d83"),type="surface") %>%
+      add_trace(data=DF, x=exp(DF$Dose), y=exp(DF$Time), z=DF$Exp, mode="markers", type="scatter3d",
+                marker = list(opacity=0.7, symbol=105)) %>%
+      layout(scene = list(
+        aspectmode = "manual",
+        aspectratio = list(x=1, y=1, z=1),
+        xaxis = list(title = "Dose"),
+        yaxis = list(title = "Time"),
+        zaxis = list(title = "Exp")))
+  }else{
+    p = plot_ly(x=~toPlot[[1]], y=~toPlot[[2]], z=~t(toPlot[[3]]),
+                colors = c("#f5cb11", "#b31d83"),type="surface") %>%
+      add_trace(data=DF, x=DF$Dose, y=DF$Time, z=DF$Exp, mode="markers", type="scatter3d",
+                marker = list(opacity=0.7, symbol=105)) %>%
+      layout(scene = list(
+        aspectmode = "manual",
+        aspectratio = list(x=1, y=1, z=1),
+        xaxis = list(title = "Dose"),
+        yaxis = list(title = "Time"),
+        zaxis = list(title = "Exp")))
+  }
+ 
+  
+  # p = plot_ly(x=~exp(x), y=~exp(y), z=~t(z),
+  #             colors = c("#f5cb11", "#b31d83"),type="surface") %>%
+  #   add_trace(data=pd, x=exp(pd$Dose), y=exp(pd$Day), z=pd$Counts, mode="markers", type="scatter3d",
+  #             marker = list(opacity=0.7, symbol=105)) %>%
+  #   layout(scene = list(
+  #     aspectmode = "manual",
+  #     aspectratio = list(x=1, y=1, z=1),
+  #     xaxis = list(title = "Dose"),
+  #     yaxis = list(title = "Time"),
+  #     zaxis = list(title = "Counts")))
+  
   return(p)
 }
 
