@@ -68,8 +68,8 @@ test_that("pipeline works", {
   plot3d(toPlot = list(contour_res$RPGenes$Zufsp[[1]],contour_res$RPGenes$Zufsp[[2]],contour_res$RPGenes$Zufsp[[3]]),logScale = TRUE, DF = contour_res$DFList$Zufsp)
   
       ######  Example of how to plot gene map
-  geneName = "Cfp"
-  immy = contour_res$RPGenes[[geneName]][[3]]
+  geneName = "Zufsp"
+  immy = contour_res$RPGenes[[4]][[3]]
   coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
   toPlot = TRUE
   activity_threshold = 0.1
@@ -94,6 +94,7 @@ test_that("pipeline works", {
                          relGenes = contour_res$ggenes, toPlot = FALSE)
   
   Mat = res$Mat
+  dim(Mat)
   
   par(mfrow = c(2,2))
   
