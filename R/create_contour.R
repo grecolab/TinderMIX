@@ -1,3 +1,82 @@
+model_fitting_and_validation = function(Exp, pvalFitting= 0.05, modelSelection=1:3){
+  
+  #TODO: if we decide to add different models, e.g. hill we can ask the user which method they want to use (e.g. with an extra parameter modelSelectionStrategy = c("anova","bic"))
+  # or we can still choose the optimal across the polynomials with the anova strategy and then compare this optimal one against the other by comparing their akaike criterion values
+  
+  # fitting linear, poly2 and poly3 models
+  ModList = list()
+  null_model <- stats::lm(Exp ~ 1, data = Exp)
+  lin_model <- stats::lm(Exp ~ Dose + Time,data = Exp)
+  poly2_model <- stats::lm(Exp ~ I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time, data = Exp)
+  poly3_model <- stats::lm(Exp ~ I(Dose^3) + I(Dose^2 * Time) + I(Dose * Time^2) + I(Time^3) + I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time  ,data = Exp)
+  
+  ModList[["linear"]] = lin_model
+  ModList[["poly2"]] = poly2_model
+  ModList[["poly3"]] = poly3_model
+  
+  #store fitted models in a list without names for do.call on anova
+  MML = list(lin_model, poly2_model, poly3_model)
+  
+  # select only the ones in modelSelection parameter
+  ModList = ModList[modelSelection]
+  MML = MML[modelSelection]
+  
+  # computing model statistics and p-value
+  SingleStats = c()
+  for(model in ModList){
+    f <- summary(model)$fstatistic
+    p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
+    adj.r.square = summary(model)$adj.r.squared
+    RSS <- c(crossprod(model$residuals))
+    MSE <- RSS / length(model$residuals)
+    RMSE <- sqrt(MSE)
+    BICmod = stats::BIC(model)
+    AICmod = stats::AIC(model)
+    
+    SingleStats = rbind(SingleStats, c(p, adj.r.square,RMSE, BICmod, AICmod))
+  }
+  
+  colnames(SingleStats) = c("PValue","Adj.R.Square","RMSE","BIC","AIC")
+  rownames(SingleStats) = names(ModList)
+  
+  # create a list including the null model and compute the anova between the null model, the linear, the poly2 and poly3 models
+  MMListN = c(list(null_model), MML)
+  anovaTest = do.call(anova, MMListN)
+  #take anova pvalues
+  anovaPVal = anovaTest$`Pr(>F)`
+  #assign to pvalues model names
+  names(anovaPVal) = c("Null",names(ModList))
+  #set to 1 the pvalue for the null model
+  anovaPVal[is.na(anovaPVal)] = 1
+  
+  #identify the smallest pvalue
+  optIdx = which.min(anovaPVal)
+  # get the statistics for the model associated to the smallest pvalue
+  SS = SingleStats[(optIdx-1),]
+  
+  # the model associated with the smallest pvalue is returned. We don't filter for sign pvalues here, since we will probably apply a correction after
+  optModel = ModList[[(optIdx-1)]]
+  SS["PValue"] = anovaPVal[optIdx] #N.B. the pvalue returned for the model is the one of the anova with respect to the previous model in the nested hierarchy
+  SS = c(SS, names(ModList)[(optIdx-1)])
+  names(SS)[length(SS)] = "OptMod"
+  toRet = list(optModel = optModel, stats = SS, modelsStats = SingleStats,anovaTest=anovaTest)
+  return(toRet)
+  
+  # # if the model with smallest pvalue is significative with respect to his previous model in the anova and with respect to the null model, than that gene is selected as the otpimal one
+  # if(anovaPVal[optIdx] < pvalFitting & SS["PValue"]<pvalFitting){
+  #   optModel = ModList[[(optIdx-1)]]
+  #   SS["PValue"] = anovaPVal[optIdx] #N.B. the pvalue returned for the model is the one of the anova with respect to the previous model in the nested hierarchy
+  #   SS = c(SS, names(ModList)[(optIdx-1)])
+  #   names(SS)[length(SS)] = "OptMod"
+  #   toRet = list(optModel = optModel, stats = SS)
+  #   return(toRet)
+  # }else{
+  #   #otherwise the gene is considered not fitted and the function return an empy list
+  #   return(list(c(),SS*NA))
+  # }
+}
+
+
 #'
 #' This function fits a 3D regression model for every gene in the dataset and creates an N x N contour plot
 #'
@@ -26,8 +105,10 @@
 create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, time_point_index, gridSize = 50, 
                           pvalFitting.adj.method = "fdr",pvalFitting=0.05, logScale = FALSE,
                           modelSelection = c(1,2)){  #models is a vector of indices specifying which model to fit. 1:linear 2: poly2, 3: poly3
+  
   GenesMap = matrix(NA, ncol = length(responsive_genes), nrow = (gridSize*gridSize) )
   colnames(GenesMap) = responsive_genes
+  
   RPGenes = list()
   DFList = list()
   ModList = list()
@@ -55,41 +136,13 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
     if(logScale){
       Exp$Dose = log(Exp$Dose)
       Exp$Time = log(Exp$Time)
+      #fit three different models and store the results in a list
       
-      ModList = list()
-      lin_model <- stats::lm(Exp ~ Dose + Time,data = Exp)
-      poly2_model <- stats::lm(Exp ~ I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time, data = Exp)
-      poly3_model <- stats::lm(Exp ~ I(Dose^3) + I(Dose^2 * Time) + I(Dose * Time^2) + I(Time^3) + I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time  ,data = Exp)
+      fitted_models = model_fitting_and_validation(Exp, modelSelection=modelSelection)
       
-      ModList[["linear"]] = lin_model
-      ModList[["poly2"]] = poly2_model
-      ModList[["poly3"]] = poly3_model
-      
-      ModList = ModList[modelSelection]
-      
-      SingleStats = c()
-      
-      for(model in ModList){
-        f <- summary(model)$fstatistic
-        p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
-        adj.r.square = summary(model)$adj.r.squared
-        RSS <- c(crossprod(model$residuals))
-        MSE <- RSS / length(model$residuals)
-        RMSE <- sqrt(MSE)
-        BICmod = stats::BIC(model)
-        AICmod = stats::AIC(model)
-        
-        SingleStats = rbind(SingleStats, c(p, adj.r.square,RMSE, BICmod, AICmod))
-      }
-      
-      colnames(SingleStats) = c("PValue","Adj.R.Square","RMSE","BIC","AIC")
-      rownames(SingleStats) = names(ModList)
-      
-      optIdx = which.min(SingleStats[,"AIC"])
-      optModel = ModList[[optIdx]]
-      
-      Stats[index,] = c(SingleStats[optIdx,], names(ModList)[optIdx])
-      
+      optModel = fitted_models$optModel
+      Stats[index,] = fitted_models$stats
+  
       x1 <-range(as.numeric(as.vector(exp(Exp$Dose))))
       x1 <- seq(x1[1], x1[2], length.out=gridSize)
       y1 <- range(as.numeric(as.vector(exp(Exp$Time))))
@@ -105,38 +158,9 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
       #plot3d(toPlot = List3d,logScale = TRUE, DF = Exp)
       
     }else{
-      ModList = list()
-      lin_model <- stats::lm(Exp ~ Dose + Time,data = Exp)
-      poly2_model <- stats::lm(Exp ~ I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time, data = Exp)
-      poly3_model <- stats::lm(Exp ~ I(Dose^3) + I(Dose^2 * Time) + I(Dose * Time^2) + I(Time^3) + I(Dose^2) + I(Time^2) + I(Dose * Time) + Dose + Time  ,data = Exp)
-      
-      ModList[["linear"]] = lin_model
-      ModList[["poly2"]] = poly2_model
-      ModList[["poly3"]] = poly3_model
-      ModList = ModList[modelSelection]
-      
-      SingleStats = c()
-      
-      for(model in ModList){
-        f <- summary(model)$fstatistic
-        p <- stats::pf(f[1],f[2],f[3],lower.tail=F)
-        adj.r.square = summary(model)$adj.r.squared
-        RSS <- c(crossprod(model$residuals))
-        MSE <- RSS / length(model$residuals)
-        RMSE <- sqrt(MSE)
-        BICmod = stats::BIC(model)
-        AICmod = stats::AIC(model)
-        
-        SingleStats = rbind(SingleStats, c(p, adj.r.square,RMSE, BICmod, AICmod))
-      }
-      
-      colnames(SingleStats) = c("PValue","Adj.R.Square","RMSE","BIC","AIC")
-      rownames(SingleStats) = names(ModList)
-      
-      optIdx = which.min(SingleStats[,"AIC"])
-      optModel = ModList[[optIdx]]
-      
-      Stats[index,] = c(SingleStats[optIdx,], names(ModList)[optIdx])
+      fitted_models = model_fitting_and_validation(Exp, modelSelection=modelSelection)
+      optModel = fitted_models$optModel
+      Stats[index,] = fitted_models$stats
       
       x <-range(as.numeric(as.vector(Exp$Dose)))
       x <- seq(x[1], x[2], length.out=gridSize)
@@ -144,7 +168,6 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
       y <- seq(y[1], y[2], length.out=gridSize)
       z <- outer(x,y, function(Dose,Time) stats::predict(optModel, data.frame(Dose,Time)))
       List3d=list(x,y,z)
-      
       #plot3d(toPlot = List3d,logScale = FALSE, DF = Exp)
       
     }
@@ -155,8 +178,8 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
     DFList[[g]] = Exp
     ModList[[g]] = optModel
     
-    p = plot3d(toPlot = list(x,y,z),DF = Exp)
-    p
+    # p = plot3d(toPlot = list(x,y,z),DF = Exp)
+    # p
 
     setTxtProgressBar(pb,index)
     index = index + 1
@@ -165,8 +188,11 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
   close(pb)
   
   SST = as.data.frame(Stats)
+  SST[,1] = as.numeric(as.vector(SST[,1]))
+  SST[,2] = as.numeric(as.vector(SST[,2]))
+  SST[,3] = as.numeric(as.vector(SST[,3]))
   
-  adj.pval = p.adjust(as.numeric(as.vector(SST[,1])),method = pvalFitting.adj.method)
+  adj.pval = p.adjust(SST[,1],method = pvalFitting.adj.method)
   SST = cbind(adj.pval,SST)
   ggenes = rownames(SST)[SST[,1]<pvalFitting]
   Stats = SST
