@@ -266,7 +266,10 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
   goodGenes = c()
   GeneRes = list()
   geneDegree = c()
-  geneDegreeLabel = c()
+  geneTimeLabel = c()
+  geneComparativeLabel = c()
+  
+  bmdArea = c()
   
   pb = txtProgressBar(min = 1, max = length(contour_res$RPGenes), style = 3)
   for(i in 1:length(contour_res$RPGenes)){
@@ -286,7 +289,9 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
         labels =  as.vector(res$label$ttt_label)
         Map[[geneName]] =  c(labels,res$verso)
         geneDegree = c(geneDegree,res$timedosedegree)
-        geneDegreeLabel = c(geneDegreeLabel, res$degree_lab)
+        geneTimeLabel = c(geneTimeLabel, res$time_label)
+        geneComparativeLabel = c(geneComparativeLabel, res$comparative_label)
+        bmdArea = c(bmdArea,res$bmd_area_sum)
         goodGenes = c(goodGenes,geneName)
       }
     }, error = function(e) {
@@ -297,7 +302,9 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
   close(pb)
   
   names(geneDegree) = goodGenes
-  names(geneDegreeLabel) = goodGenes
+  names(geneTimeLabel) = goodGenes
+  names(geneComparativeLabel) = goodGenes
+  names(bmdArea) = goodGenes
   
   Mat = do.call(rbind,Map)
   colnames(Mat) = c(label_leg,"Verso")
@@ -307,15 +314,21 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
     Mat[i,] = Mat[i,]* verso[i]
   }
 
-  MMA = cbind(Mat, rowSums(abs(Mat)))
+  # timesign = gsub(geneTimeLabel[rownames(Mat)],pattern = "Time ",replacement = "")
+  # timesign[timesign == "+"] = 1
+  # timesign[timesign == "-"] = -1
+  # timesign = as.numeric(timesign)
+  
+
+  MMA = cbind(Mat, geneTimeLabel[rownames(Mat)],rowSums(Mat[,1:9]),geneComparativeLabel[rownames(Mat)],  bmdArea[rownames(Mat)])
+  colnames(MMA)[(ncol(MMA)-3):ncol(MMA)] = c("Time","Dose","Comparison(1Dose,2Time,0Both)","AreaCoverage")
   
   labels = list()
   for(i in 1:nrow(Mat)){
     labels[[i]] = paste(colnames(Mat)[Mat[i,]!=0], collapse = " ")
   }
   
-
-  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes, geneDegree=geneDegree,geneDegreeLabel=geneDegreeLabel,labels=labels))
+  return(list(Mat=Mat,MMA=MMA,GeneRes=GeneRes, geneDegree=geneDegree,geneTimeLabel=geneTimeLabel,geneComparativeLabel=geneComparativeLabel,bmdArea=bmdArea, labels=labels))
 }
 
 #'
@@ -583,32 +596,63 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   }
   
   bmd_area_idx = which(BMD==1,arr.ind = T)
-
+  
+  bmd_area_sum = length(which(BMD==1))/(gridSize^2)
+  
   gradi = c()
   modL = c()
   for(i in 1:nrow(bmd_area_idx)){
     yc = gy[bmd_area_idx[i,1],bmd_area_idx[i,2]]
     xc = gx[bmd_area_idx[i,1],bmd_area_idx[i,2]]
-    dg = rad2deg(atan2(yc, xc))
-    md = sqrt(yc^2 + xc^2)
+    dg = rad2deg(atan2(yc, xc) + pi) #angolo
+    md = sqrt(yc^2 + xc^2) # modulo
     gradi = c(gradi, dg)
     modL = c(modL,md)
   }
   
   tdd = (1/sum(modL)) * sum(gradi * modL)
-  if(tdd>0 & tdd<90){
-    degree_lab = "Time -"
-  }else{
-    if(tdd>=90 & tdd<=180){
-      degree_lab = "Time +"
-    }else{
-      if(tdd <=0 & tdd>-90){
-        degree_lab = "Time -"
-      }else{
-        degree_lab = "Time -"
-      }
-    }
+
+  # time_label will be one, if time effect is positive, otherwise it will be -1
+  # comparative label will be 1 if dose is greater than time, 2 if time is greater than dose and 0 if they have the same effect
+  # primo quadrante
+  if(tdd>=0 & tdd<30){
+    time_label = 1
+    comparative_label = 1
+  }else if(tdd>=30 & tdd<60){
+    time_label = 1
+    comparative_label = 0
+  }else if(tdd>=60 & tdd<90){
+    time_label = 1
+    comparative_label = 2
+  }else if(tdd>=90 & tdd<120){ #secondo quadrante
+    time_label = 1
+    comparative_label = 2
+  }else if(tdd>=120 & tdd<150){
+    time_label = 1
+    comparative_label = 0
+  }else if(tdd>=150 & tdd<180){
+    time_label = 1
+    comparative_label = 1
+  }else if(tdd>=180 & tdd<210){ #terzo quadrante
+    time_label = -1
+    comparative_label = 1
+  }else if(tdd>=210 & tdd<240){
+    time_label = -1
+    comparative_label = 0
+  }else if(tdd>=240 & tdd<270){
+    time_label = -1
+    comparative_label = 2
+  }else if(tdd>=270 & tdd<300){ #quarto quadrante
+    time_label = -1
+    comparative_label = 2
+  }else if(tdd>=300 & tdd<330){
+    time_label = -1
+    comparative_label = 0
+  }else if(tdd>=330 & tdd<360){
+    time_label = -1
+    comparative_label = 1
   }
+  
   
   restt0 = label2DMap(map = ternaryIMBMD,BMD = BMD, coord=coord,myContour = myContour,th = BMD_response_threshold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
   
@@ -665,7 +709,9 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   ans$timedosedegree = tdd
   ans$gradi = gradi
   ans$modL = modL
-  ans$degree_lab = degree_lab
+  ans$time_label = time_label
+  ans$comparative_label = comparative_label
+  ans$bmd_area_sum =  bmd_area_sum
   class(ans) = 'TinderMIX'
   return(ans)
   
