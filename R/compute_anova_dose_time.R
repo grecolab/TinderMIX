@@ -33,10 +33,16 @@ compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point
     colnames(Exp) = c("Sample","Exp","Dose","Time")
     Exp$Dose = as.factor(Exp$Dose)
     Exp$Time = as.factor(Exp$Time)
-    fit = aov(Exp ~ Dose * Time , data = Exp)
+    
+    # print(Exp$Dose)
+    # print(Exp$Time)
+    
+    fit = aov(Exp ~ Dose*Time , data = Exp)
     sf = summary(fit)
     anova_models[[rownames(exp_data)[i]]] = fit
     PvalMat = rbind(PvalMat,sf[[1]][1:3,5])
+    
+
     setTxtProgressBar(pb,i)
   }
   close(pb)
@@ -45,13 +51,13 @@ compute_anova_dose_time  = function(exp_data, pheno_data, dose_index, time_point
   rownames(PvalMat) = rownames(exp_data)
   
   if(adj.method == "none"){
-    return(PvalMat)
+    return(list(PvalMat=PvalMat, anova_models=anova_models))
   }else{
     PvalMatAdj = PvalMat
     PvalMatAdj[,1] = stats::p.adjust(PvalMatAdj[,1], method = adj.method)
     PvalMatAdj[,2] = stats::p.adjust(PvalMatAdj[,2], method = adj.method)
     PvalMatAdj[,3] = stats::p.adjust(PvalMatAdj[,3], method = adj.method)
-    return(PvalMatAdj)
+    return(list(PvalMat = PvalMatAdj,anova_models=anova_models))
     
   }
   
