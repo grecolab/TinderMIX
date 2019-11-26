@@ -24,7 +24,9 @@ Depends:
     xlsx,
     pracma,
     raster,
-    wordcloud
+    wordcloud,
+    ggplot2,
+    fmsb
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
