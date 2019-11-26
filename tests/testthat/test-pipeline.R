@@ -39,21 +39,23 @@ test_that("pipeline works", {
   mis = 0
   only_annotated=FALSE
   
-  print("Step 1: Compute Anova")
-  PvalMat = suppressMessages(compute_anova_dose_time(exp_data, 
-                                                     pheno_data,
-                                                     dose_index = dose_index,
-                                                     time_point_index = time_point_index))
+  # print("Step 1: Compute Anova")
+  # PvalMat = suppressMessages(compute_anova_dose_time(exp_data, 
+  #                                                    pheno_data,
+  #                                                    dose_index = dose_index,
+  #                                                    time_point_index = time_point_index))
+  # 
+  # print("Step 2: Identify responsive genes")
+  # ItemsList = build_items_list(PvalMat)
+  # 
+  # # Responsive Genes are the gene that have a significant pvalue for dose, time and dose, time and dose * time
+  # responsive_genes = unique(c(unlist(ItemsList$Dose),
+  #                             unlist(ItemsList$Time),
+  #                             unlist(ItemsList$`Dose:Time:DoseTime`),
+  #                             unlist(ItemsList$`Dose:Time`)))
 
-  print("Step 2: Identify responsive genes")
-  ItemsList = build_items_list(PvalMat)
+  responsive_genes = rownames(exp_data)[1:10]
   
-  # Responsive Genes are the gene that have a significant pvalue for dose, time and dose, time and dose * time
-  responsive_genes = unique(c(unlist(ItemsList$Dose),
-                              unlist(ItemsList$Time),
-                              unlist(ItemsList$`Dose:Time:DoseTime`),
-                              unlist(ItemsList$`Dose:Time`)))
-
   print("Step 3: Computing contour plot")
   contour_res = suppressMessages(create_contour(exp_data, pheno_data, 
                                                 responsive_genes,
