@@ -54,7 +54,7 @@ test_that("pipeline works", {
   #                             unlist(ItemsList$`Dose:Time:DoseTime`),
   #                             unlist(ItemsList$`Dose:Time`)))
 
-  responsive_genes = rownames(exp_data)[1:10]
+  responsive_genes = rownames(exp_data)[1:100]
   
   print("Step 3: Computing contour plot")
   contour_res = suppressMessages(create_contour(exp_data, pheno_data, 

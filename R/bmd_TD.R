@@ -268,6 +268,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
   geneDegree = c()
   geneTimeLabel = c()
   geneComparativeLabel = c()
+  mean_fc = c()
   
   bmdArea = c()
   
@@ -292,6 +293,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
         geneTimeLabel = c(geneTimeLabel, res$time_label)
         geneComparativeLabel = c(geneComparativeLabel, res$comparative_label)
         bmdArea = c(bmdArea,res$bmd_area_sum)
+        mean_fc = c(mean_fc, res$mean_fc_bmd_area)
         goodGenes = c(goodGenes,geneName)
       }
     }, error = function(e) {
@@ -305,6 +307,7 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
   names(geneTimeLabel) = goodGenes
   names(geneComparativeLabel) = goodGenes
   names(bmdArea) = goodGenes
+  names(mean_fc) = goodGenes
   
   Mat = do.call(rbind,Map)
   colnames(Mat) = c(label_leg,"Verso")
@@ -320,8 +323,10 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
   # timesign = as.numeric(timesign)
   
 
-  MMA = cbind(Mat, geneTimeLabel[rownames(Mat)],rowSums(Mat[,1:9]),geneComparativeLabel[rownames(Mat)],  bmdArea[rownames(Mat)])
-  colnames(MMA)[(ncol(MMA)-3):ncol(MMA)] = c("Time","Dose","Comparison(1Dose,2Time,0Both)","AreaCoverage")
+  MMA = cbind(Mat, geneTimeLabel[rownames(Mat)],rowSums(Mat[,1:9]),geneComparativeLabel[rownames(Mat)],  bmdArea[rownames(Mat)], mean_fc[rownames(Mat)])
+  colnames(MMA)[(ncol(MMA)-4):ncol(MMA)] = c("Time","Dose","Comparison(1Dose,2Time,0Both)","AreaCoverage", "MeanFC")
+  
+  print(colnames(MMA))
   
   labels = list()
   for(i in 1:nrow(Mat)){
@@ -597,6 +602,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   
   bmd_area_idx = which(BMD==1,arr.ind = T)
   
+  mean_fc_bmd_area = mean(immy[bmd_area_idx])
+  
   bmd_area_sum = length(which(BMD==1))/(gridSize^2)
   
   gradi = c()
@@ -697,6 +704,8 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
 
   ans = list()
   ans$immy = immy
+  ans$mean_fc_bmd_area = mean_fc_bmd_area
+  ans$bmd_area_idx = bmd_area_idx
   ans$activity_threshold = activity_threshold
   ans$gradient = gg
   ans$binaryIMBMD = binaryIMBMD
