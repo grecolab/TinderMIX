@@ -229,21 +229,31 @@ compute_enrichment_for_clusters = function(optimal_clustering,corrType = "fdr",t
 #'
 compute_pathways = function(geneList = rownames(res$Mat),corrType = "fdr",type_enrich="KEGG", annType = "SYMBOL",org_enrich = "hsapiens",pth = 0.05,sig = FALSE,mis = 0,only_annotated=FALSE ){
   GList = list(matrix(geneList, ncol = 1))
-  GList = convert_genes(organism = org_enrich, GList=GList, annType = annType)
   
-  if(corrType == "none"){
-    print("Nominal PValue")
-    EnrichDatList = lapply(GList,enrich,type_enrich,org_enrich,pth,"bonferroni", sig = sig, mis = mis, only_annotated=only_annotated)
-    for(i in 1:length(EnrichDatList)){
-      ERi = EnrichDatList[[i]]
-      ERi$pValueAdj = ERi$pValueAdj / length(ERi$pValueAdj)
-      ERi$pValue = ERi$pValueAdj / length(ERi$pValue)
-      EnrichDatList[[i]] = ERi
+  tryCatch(
+    EnrichDatList = {
+      GList = convert_genes(organism = org_enrich, GList=GList, annType = annType)
+      
+      if(corrType == "none"){
+        print("Nominal PValue")
+        EnrichDatList = lapply(GList,enrich,type_enrich,org_enrich,pth,"bonferroni", sig = sig, mis = mis, only_annotated=only_annotated)
+        for(i in 1:length(EnrichDatList)){
+          ERi = EnrichDatList[[i]]
+          ERi$pValueAdj = ERi$pValueAdj / length(ERi$pValueAdj)
+          ERi$pValue = ERi$pValueAdj / length(ERi$pValue)
+          EnrichDatList[[i]] = ERi
+        }
+      }else{
+        EnrichDatList = lapply(GList,enrich,type_enrich,org_enrich,pth,corrType, sig = sig,  mis = mis, only_annotated=only_annotated)
+      }
+      EnrichDatList = EnrichDatList[[1]]
+    },
+    error = function(e){ 
+      EnrichDatList = matrix(data = "",nrow = 1,ncol = 5)
+      colnames(EnrichDatList)  = c("annID","gID" ,"pValue","pValueAdj","Description")
     }
-  }else{
-    EnrichDatList = lapply(GList,enrich,type_enrich,org_enrich,pth,corrType, sig = sig,  mis = mis, only_annotated=only_annotated)
-  }
-  EnrichDatList = EnrichDatList[[1]]
+  )
+  
   return(EnrichDatList)
   
 }

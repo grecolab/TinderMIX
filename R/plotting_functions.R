@@ -1,4 +1,13 @@
-# this function takes in input the result of the function run_all_BMD_IC50 and plot a 3x3 heatmap with the number of dose responsive genes for each label
+
+#'
+#' This function takes in input the result of the function run_all_BMD_IC50 and plot a 3x3 
+#' heatmap with the number of dose responsive genes for each label
+#'
+#' @param res is the result object from the run_all_BMD_IC50 function
+#' @param drugName is the name of the drug that will be used in the title 
+#' @return a ggplot object
+#' @export
+#'
 
 plot_number_genes_labels = function(res, drugName ){
   library(ggplot2)
@@ -36,6 +45,19 @@ plot_number_genes_labels = function(res, drugName ){
 # the letters d and t (independently if they are capital or small ) stand for dose and time
 # +/- indicate if the gene fc is increasing or decreasing with respect of dose and time
 # capital letters are used to indicate which between dose and time has a stronger effect
+
+
+#'
+#' this function takes in input the result of the function run_all_BMD_IC50 and plot a 3x3 multiplot with the number of dose responsive genes fir tge 12 segment of time and dose interaction
+#' the letters d and t (independently if they are capital or small ) stand for dose and time
+#' +/- indicate if the gene fc is increasing or decreasing with respect of dose and time
+#' capital letters are used to indicate which between dose and time has a stronger effect
+#'
+#' @param res is the result object from the run_all_BMD_IC50 function
+#' @return a ggplot object
+#' @export
+#'
+
 
 plot_cake_diagrams_time_dose_effect = function(res){
   M = res$MMA
@@ -111,11 +133,20 @@ plot_cake_diagrams_time_dose_effect = function(res){
                     listPlot[[9]], cols=3)
 }
 
-# this function takes in input the pathways enriched and retur a radar chart for each one of the gene label category
-# n is the max number of pathways to plot in each radar plot
-# caxislabels	is a character vector for center axis labels, overwriting values specified in axistype option. 
-# If NULL, the values specified by axistype option are used. Default is NULL.
-# vlcex is the size of the labels
+
+#'
+#' this function takes in input the pathways enriched and retur a radar chart for each one of the gene label category
+#'
+#' @param Enriched_list is the list of dataframe resulting from enrichment for each gene category
+#' @param n is the max number of pathways to plot in each radar plot
+#' @param caxislabels is a character vector for center axis labels, overwriting values specified in axistype option. If NULL, the values specified by axistype option are used. Default is NULL.
+#' @param vlcex is the size of the labels
+#' @param kegg_level is the level of the kegg hierarchy to be considered in the plotting
+#' @param mar are the margin settings for the plot
+#' @return a ggplot object
+#' @export
+#'
+
 plot_kegg_radar_chart = function(Enriched_list,  n = 5, vlcex = 1.5, kegg_level = 1,mar = c(2,1,1,1)){
   library(fmsb)
   
