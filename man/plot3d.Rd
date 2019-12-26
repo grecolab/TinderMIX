@@ -4,7 +4,7 @@
 \alias{plot3d}
 \title{This function plots the fitted 3d surface for the expression value of a gene}
 \usage{
-plot3d(toPlot = list(x, y, z), DF)
+plot3d(toPlot = list(x, y, z), DF, logScale = FALSE)
 }
 \arguments{
 \item{toPlot}{is a list containing the predicted value for the x, y and z axis}

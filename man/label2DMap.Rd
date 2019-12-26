@@ -4,13 +4,15 @@
 \alias{label2DMap}
 \title{This function assigns a label to contour map}
 \usage{
-label2DMap(map, coord, myContour, th = 0.95, mode = "cumulative",
+label2DMap(map, BMD, coord, myContour, th = 0.95, mode = "mix",
   nDoseInt = 3, nTimeInt = 3, doseLabels = c("Late", "Middle",
   "Early"), timeLabels = c("Sensitive", "Intermediate", "Resilient"),
   toplot = FALSE)
 }
 \arguments{
 \item{map}{matrix containing the z-map for a specific gene or cluster prototype}
+
+\item{BMD}{matrix containing the dose-response area}
 
 \item{coord}{matrix with x and y coordinate. The first column contain the doses, while the second one the time points}
 

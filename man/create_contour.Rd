@@ -6,7 +6,7 @@
 \usage{
 create_contour(exp_data, pheno_data, responsive_genes, dose_index,
   time_point_index, gridSize = 50, pvalFitting.adj.method = "fdr",
-  pvalFitting = 0.05)
+  pvalFitting = 0.05, logScale = FALSE, modelSelection = c(1, 2))
 }
 \arguments{
 \item{exp_data}{is the expression matrix with genes on the rows and samples on the columns}
@@ -20,6 +20,10 @@ create_contour(exp_data, pheno_data, responsive_genes, dose_index,
 \item{time_point_index}{numeric value specifing the column of the phenodata table containing the time points}
 
 \item{gridSize}{numeric value specifing size of the z-grid}
+
+\item{logScale}{boolean specifying if the fitting is performed by using the dose and time in log or linear scale}
+
+\item{modelSelection}{is a vector of indices specifying which model to fit. 1:linear 2: poly2, 3: poly3}
 }
 \value{
 a list with list with estimated contour objects, 3D fitted objects, fitting statistics and feature values for time and dose
@@ -27,6 +31,7 @@ a list with list with estimated contour objects, 3D fitted objects, fitting stat
 \item{RPGenes}{a list with the 3D fitted objects}
 \item{Statis}{a matrix witht the fitting statistics: PValue,Adj.R.Square,RMSE}
 \item{DFList}{a list with the data used for the fitting}
+\ite{ModList}{a list with the fitted models}
 }
 \description{
 This function fits a 3D regression model for every gene in the dataset and creates an N x N contour plot
