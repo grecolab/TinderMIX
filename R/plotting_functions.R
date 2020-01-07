@@ -58,8 +58,7 @@ plot_number_genes_labels = function(res, drugName ){
 #' @export
 #'
 
-
-plot_cake_diagrams_time_dose_effect = function(res){
+plot_cake_diagrams_time_dose_effect=function(res){
   M = res$MMA
   listPlot = list()
   
@@ -69,60 +68,72 @@ plot_cake_diagrams_time_dose_effect = function(res){
   index = 1
   for(i in c(1,4,7,2,5,8,3,6,9)){
     gi = rownames(M)[which(M[,i]!= 0)]
-    mi = M[gi, c("Dose","Time","Comparison(1Dose,2Time,0Both)")]
     
-    #mmi = apply(mi, 1, function(row){paste("Dose_", row[1], "_Time_", row[2],"_Comb_",row[3],sep="")})
-    
-    mmi = apply(mi, 1, FUN = function(elem){
-      if(elem[1]==1) dose_sign = "+" else dose_sign = "-"
-      if(elem[2]==1) time_sign = "+" else time_sign = "-"
-      if(elem[3]==1){
-        dose_letter = "D"
-        time_letter = "t"
+    if(length(gi)==0){
+      df <- data.frame()
+      p = ggplot(df) + geom_point() + xlim(0, 10) + ylim(0, 100)
+    }else{
+      
+      if(length(gi)==1){
+        mi = matrix(M[gi, c("Dose","Time","Comparison(1Dose,2Time,0Both)")],nrow = 1, ncol = 3)
+        rownames(mi) = gi
+        colnames(mi) = c("Dose","Time","Comparison(1Dose,2Time,0Both)")
+      }else{
+        mi = M[gi, c("Dose","Time","Comparison(1Dose,2Time,0Both)")]
       }
-      if(elem[3]==2){
-        dose_letter = "d"
-        time_letter = "T"
-      } 
-      if(elem[3]==0){
-        dose_letter = "D"
-        time_letter = "T"
-      }
-      paste(dose_letter, dose_sign, time_letter, time_sign, sep="")
-    })
-    
-    #levels = c("Dose_1_Time_1_Comb_1","Dose_1_Time_1_Comb_0","Dose_1_Time_1_Comb_2",
-    #                              "Dose_-1_Time_1_Comb_2","Dose_-1_Time_1_Comb_0","Dose_-1_Time_1_Comb_1",
-    #                              "Dose_-1_Time_-1_Comb_1","Dose_-1_Time_-1_Comb_0","Dose_-1_Time_-1_Comb_2",
-    #                              "Dose_1_Time_-1_Comb_2","Dose_1_Time_-1_Comb_0","Dose_1_Time_-1_Comb_1")
-    
-    # levels = c( "D(+)T(+)W(D)", "D(+)T(+)W(B)", "D(+)T(+)W(T)", 
-    #             "D(-)T(+)W(T)", "D(-)T(+)W(B)", "D(-)T(+)W(D)",
-    #             "D(-)T(-)W(D)", "D(-)T(-)W(B)", "D(-)T(-)W(T)",
-    #             "D(+)T(-)W(T)", "D(+)T(-)W(B)", "D(+)T(-)W(D)")
-    # 
-    
-    # the letters d and t (independently if they are capital or small ) stand for dose and time
-    # +/- indicate if the gene fc is increasing or decreasing with respect of dose and time
-    # capital letters are used to indicate which between dose and time has a stronger effect
-    levels = c("D+t+", "D+T+", "d+T+", "d-T+", "D-T+", "D-t+", "D-t-", "D-T-", "d-T-", "d+T-", "D+T-", "D+t-")
-    
-    
-    mmi = factor(mmi, levels = levels)
-    ti = table(mmi)
-    
-    quadrant_names = factor(names(ti), levels = levels)
-    df = data.frame(variable = quadrant_names, value = as.numeric(ti))
-    #dose_time_lab = unlist(lapply(df$variable, FUN = function(elem)substr(x = elem, start = 1, stop = 8)))
-    doseTimeEffect = tolower(df$variable)
-    df = cbind(df, doseTimeEffect)
-    
-    p = ggplot(df, aes(x = variable, y = value, group =doseTimeEffect, fill=doseTimeEffect)) +  geom_bar(stat = "identity") #+ geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25)
-    p = p + scale_y_continuous(1:12) + coord_polar(start=(-pi/2), direction = -1) + labs(x = "", y = "") 
-    p = p + theme(legend.position = "none") + theme_minimal()+ ggtitle(colnames(M)[i])
-    p = p + geom_vline(xintercept = 3.5) + geom_vline(xintercept = 6.5) + geom_vline(xintercept = 9.5) + geom_vline(xintercept = 12.5)
-    p = p + theme(axis.title.y=element_blank()) + theme(legend.position = "none")
-    p
+      
+      mmi = apply(mi, 1, FUN = function(elem){
+        if(elem[1]==1) dose_sign = "+" else dose_sign = "-"
+        if(elem[2]==1) time_sign = "+" else time_sign = "-"
+        if(elem[3]==1){
+          dose_letter = "D"
+          time_letter = "t"
+        }
+        if(elem[3]==2){
+          dose_letter = "d"
+          time_letter = "T"
+        } 
+        if(elem[3]==0){
+          dose_letter = "D"
+          time_letter = "T"
+        }
+        paste(dose_letter, dose_sign, time_letter, time_sign, sep="")
+      })
+      
+      #levels = c("Dose_1_Time_1_Comb_1","Dose_1_Time_1_Comb_0","Dose_1_Time_1_Comb_2",
+      #                              "Dose_-1_Time_1_Comb_2","Dose_-1_Time_1_Comb_0","Dose_-1_Time_1_Comb_1",
+      #                              "Dose_-1_Time_-1_Comb_1","Dose_-1_Time_-1_Comb_0","Dose_-1_Time_-1_Comb_2",
+      #                              "Dose_1_Time_-1_Comb_2","Dose_1_Time_-1_Comb_0","Dose_1_Time_-1_Comb_1")
+      
+      # levels = c( "D(+)T(+)W(D)", "D(+)T(+)W(B)", "D(+)T(+)W(T)", 
+      #             "D(-)T(+)W(T)", "D(-)T(+)W(B)", "D(-)T(+)W(D)",
+      #             "D(-)T(-)W(D)", "D(-)T(-)W(B)", "D(-)T(-)W(T)",
+      #             "D(+)T(-)W(T)", "D(+)T(-)W(B)", "D(+)T(-)W(D)")
+      # 
+      
+      # the letters d and t (independently if they are capital or small ) stand for dose and time
+      # +/- indicate if the gene fc is increasing or decreasing with respect of dose and time
+      # capital letters are used to indicate which between dose and time has a stronger effect
+      levels = c("D+t+", "D+T+", "d+T+", "d-T+", "D-T+", "D-t+", "D-t-", "D-T-", "d-T-", "d+T-", "D+T-", "D+t-")
+      
+      
+      mmi = factor(mmi, levels = levels)
+      ti = table(mmi)
+      
+      quadrant_names = factor(names(ti), levels = levels)
+      df = data.frame(variable = quadrant_names, value = as.numeric(ti))
+      #dose_time_lab = unlist(lapply(df$variable, FUN = function(elem)substr(x = elem, start = 1, stop = 8)))
+      doseTimeEffect = tolower(df$variable)
+      df = cbind(df, doseTimeEffect)
+      
+      p = ggplot(df, aes(x = variable, y = value, group =doseTimeEffect, fill=doseTimeEffect)) +  geom_bar(stat = "identity") #+ geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25)
+      p = p + scale_y_continuous(1:12) + coord_polar(start=(-pi/2), direction = -1) + labs(x = "", y = "") 
+      p = p + theme(legend.position = "none") + theme_minimal()+ ggtitle(colnames(M)[i])
+      p = p + geom_vline(xintercept = 3.5) + geom_vline(xintercept = 6.5) + geom_vline(xintercept = 9.5) + geom_vline(xintercept = 12.5)
+      p = p + theme(axis.title.y=element_blank()) + theme(legend.position = "none")
+      p
+      
+    }
     
     listPlot[[index]] = p
     index = index + 1
