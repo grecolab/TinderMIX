@@ -39,8 +39,7 @@ create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words 
   # 
   # }
 
-
- par(mfrow = c(3,3), oma = c(0,0,0,0) + 0.1, mar = c(0,0,0,0) + 0.1)
+ if(toplot) par(mfrow = c(3,3), oma = c(0,0,0,0) + 0.1, mar = c(0,0,0,0) + 0.1)
  WCDFList = list()
  WCDF = c()
  EL = c()
@@ -48,26 +47,32 @@ create_tic_tac_toe_wordcloud = function(Enriched_list = Enriched_list,max.words 
   for(i in 1:length(Enriched_list)){
     EP_all = Enriched_list[[i]]
     if(nrow(EP_all)==0){
+      if(toplot)
       plot(1, type = "n", axes=FALSE, xlab="", ylab="")
     }else{
-      #d = data.frame(word = substring(text = EP_all$Description,first = 1,last = 20), freq = log(EP_all$pValueAdj) * -2)
-      d = data.frame(word = EP_all$Description, freq = log(EP_all$pValueAdj) * -2)
-      WCDFList[[i]] = d
-      WCDF = rbind(WCDF, cbind(d, names(Enriched_list)[i]))
       
-      EL = rbind(EL, data.frame(word = EP_all$Description, pValueAdj = EP_all$pValueAdj, label = names(Enriched_list)[i]))
-       
-      if(toplot){
-        # set.seed(1234)
-        wordcloud::wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
-                             max.words=max.words, random.order=random.order,
-                             colors=brewer.pal(8, "Dark2"), scale = scale)
+      if(nrow(EP_all)==1 & (sum(EP_all[1,] == rep("",5))==5)){
+        if(toplot)
+          plot(1, type = "n", axes=FALSE, xlab="", ylab="")
+      }else{
+        #d = data.frame(word = substring(text = EP_all$Description,first = 1,last = 20), freq = log(EP_all$pValueAdj) * -2)
+        d = data.frame(word = EP_all$Description, freq = log(EP_all$pValueAdj) * -2)
+        WCDFList[[i]] = d
+        WCDF = rbind(WCDF, cbind(d, names(Enriched_list)[i]))
         
+        EL = rbind(EL, data.frame(word = EP_all$Description, pValueAdj = EP_all$pValueAdj, label = names(Enriched_list)[i]))
+        
+        if(toplot){
+          # set.seed(1234)
+          wordcloud::wordcloud(words = d$word, freq = d$freq, min.freq = min.freq,
+                               max.words=max.words, random.order=random.order,
+                               colors=brewer.pal(8, "Dark2"), scale = scale)
+          
+        }
       }
-
     }
   }
- colnames(WCDF)[3] = "label"
+  colnames(WCDF)[3] = "label"
   return(list(Enriched_list=Enriched_list,WCDFList=WCDFList,WCDF=WCDF,EL=EL))
 }
 
