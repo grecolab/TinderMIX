@@ -2,9 +2,9 @@
 
 # Example of R Usage
 ```R
-  library(TinderMIX)
+library(TinderMIX)
   
-  load("sample_data/cyclosporine AFC_data.rdata")
+load("sample_data/cyclosporine AFC_data.rdata")
 source("sample_data/set_parameters.R")
 
 exp_data = dataFC$fc_data
