@@ -1,5 +1,7 @@
 # TinderMIX
 
+TinderMIX is a new computational framework for dose- and time- dependent gene expression analysis which aims to identify groups of genes that show a dynamic dose-response behaviour.
+
 # Example of R Usage
 ```R
 library(TinderMIX)
