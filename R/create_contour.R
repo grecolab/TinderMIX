@@ -96,7 +96,7 @@ model_fitting_and_validation = function(Exp, pvalFitting= 0.05, modelSelection=1
 #' \item{RPGenes}{a list with the 3D fitted objects}
 #' \item{Statis}{a matrix witht the fitting statistics: PValue,Adj.R.Square,RMSE}
 #' \item{DFList}{a list with the data used for the fitting}
-#' \ite{ModList}{a list with the fitted models}
+#' \item{ModList}{a list with the fitted models}
 #' @export
 #'
 
