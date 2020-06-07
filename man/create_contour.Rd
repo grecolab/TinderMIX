@@ -31,7 +31,7 @@ a list with list with estimated contour objects, 3D fitted objects, fitting stat
 \item{RPGenes}{a list with the 3D fitted objects}
 \item{Statis}{a matrix witht the fitting statistics: PValue,Adj.R.Square,RMSE}
 \item{DFList}{a list with the data used for the fitting}
-\ite{ModList}{a list with the fitted models}
+\item{ModList}{a list with the fitted models}
 }
 \description{
 This function fits a 3D regression model for every gene in the dataset and creates an N x N contour plot
