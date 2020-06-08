@@ -142,6 +142,7 @@ plot_cake_diagrams_time_dose_effect=function(res){
   ggplot2.multiplot(listPlot[[1]], listPlot[[2]], listPlot[[3]], listPlot[[4]],
                     listPlot[[5]], listPlot[[6]], listPlot[[7]], listPlot[[8]],
                     listPlot[[9]], cols=3)
+  return(listPlot)
 }
 
 
