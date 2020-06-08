@@ -154,20 +154,21 @@
 {
 	"atype":"TINDERMIX_PLOT_N_GENE_BY_LABEL",
 	"path": "tindermix/plot_numbers_gene_label.R",
+	"inputs": {
 		"DDRGene": {
 		"type": "IOTYPE_FILE"
 	  },
 	  "height":{
-	  	"type" = "IOTYPE_INT",
-	  	"value" = 5
+	  	"type" : "IOTYPE_INT",
+	  	"value" : 5
 	  },
 	  "drugName":{
-	  	"type" = "IOTYPE_STRING",
-	  	"value" = "WY-14643"
+	  	"type" : "IOTYPE_STRING",
+	  	"value" : "WY-14643"
 	  },
 	  "width":{
-	  	"type" = "IOTYPE_INT",
-	  	"value" = 5
+	  	"type" : "IOTYPE_INT",
+	  	"value": 5
 	  }
 	},
 	"outputs": {
@@ -179,20 +180,21 @@
 {
 	"atype":"TINDERMIX_PLOT_CAKE_DIAGRAM",
 	"path": "tindermix/plot_numbers_gene_label.R",
+	"inputs": {
 		"DDRGene": {
 		"type": "IOTYPE_FILE"
 	  },
 	  "height":{
-	  	"type" = "IOTYPE_INT",
-	  	"value" = 5
+	  	"type": "IOTYPE_INT",
+	  	"value": 5
 	  },
 	  "drugName":{
-	  	"type" = "IOTYPE_STRING",
-	  	"value" = "WY-14643"
+	  	"type": "IOTYPE_STRING",
+	  	"value": "WY-14643"
 	  },
 	  "width":{
-	  	"type" = "IOTYPE_INT",
-	  	"value" = 5
+	  	"type": "IOTYPE_INT",
+	  	"value": 5
 	  }
 	},
 	"outputs": {
@@ -212,16 +214,16 @@
 		"type": "IOTYPE_FILE"
 	  },
 	  "height":{
-	  	"type" = "IOTYPE_INT",
-	  	"value" = 5
+	  	"type": "IOTYPE_INT",
+	  	"value": 5
 	  },
 	  "biomart_dataset":{
-	  	"type" = "IOTYPE_STRING",
-	  	"value" = "rnorvegicus_gene_ensembl"
+	  	"type" : "IOTYPE_STRING",
+	  	"value" : "rnorvegicus_gene_ensembl"
 	  },
 	  "width":{
-	  	"type" = "IOTYPE_INT",
-	  	"value" = 5
+	  	"type" : "IOTYPE_INT",
+	  	"value" : 5
 	  }
 	},
 	"outputs": {
@@ -229,4 +231,4 @@
 			"type": "IOTYPE_FILE"
 		}
 	}
-},
+}
