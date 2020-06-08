@@ -5,7 +5,9 @@ tryCatch({
 	
 	myInputs <- task$inputs
 	
-	fc_data <- myInputs$fc_data$value
+	fc_data_file <- myInputs$fc_data$value
+	fc_data = readRDS(fc_data_file)
+	
 	dose_index <- myInputs$doseIDCol$value
 	time_point_index <- myInputs$timeIDCol$value
 	
@@ -20,7 +22,7 @@ tryCatch({
 	pheno_data = fc_data$pdata
 	
 	contour_res = suppressMessages(TinderMIX::create_contour(exp_data, pheno_data, 
-																													 responsive_genes,
+																													 responsive_genes = rownames(exp_data)[1:100],
 																													 dose_index = dose_index,
 																													 time_point_index = time_point_index ,
 																													 gridSize = gridSize,

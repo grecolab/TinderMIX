@@ -2,12 +2,11 @@ task <- input[[1]]
 
 tryCatch({
 	source(file.path(getwd(), "server/scripts/tindermix/task_functions.R"), local = T)
-	
 	myInputs <- task$inputs
 	
 	contour_resFile <- myInputs$contour_res$value
 	contour_res = readRDS(contour_resFile) #load data from CREATE_COUNTOUR step
-
+	
 	#parameter for fitting
 	activity_threshold = myInputs$activity_threshold$value
 	BMD_response_threshold = myInputs$BMD_response_threshold$value
