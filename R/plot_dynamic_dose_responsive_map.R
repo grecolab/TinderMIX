@@ -12,7 +12,7 @@ plot_dynamic_dose_responsive_map = function(contour_res, geneName,activity_thres
 
 	immy = contour_res$RPGenes[[geneName]][[3]]
 	coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
-	res2 = compute_BMD_IC50(immy,coord, geneName,
+	res2 = compute_BMD_IC50(immy = immy,coord = coord, geneName,
 													activity_threshold = activity_threshold,
 													BMD_response_threshold = BMD_response_threshold,
 													mode = mode,
