@@ -43,5 +43,10 @@ plot(gene_plot)
 label_plot = TinderMIX::plot_cake_diagrams_time_dose_effect(res = DDRGene, timeLabels = timeLabels,doseLabels = doseLabels)
 
 res = TinderMIX::create_gene_table(DDRGene,contour_res, nTimeInt,nDoseInt,biomart_dataset = "rnorvegicus_gene_ensembl")
-	
 
+# hls_res = hls_genes_clustering(contour_res$GenesMap, nClust = c(5,10,15,20,25), method="pearson", hls.method = "ward")
+# 
+# clpr = create_prototypes(clust_res=hls_res,contour_res=contour_res,optcl = hls_res$clusterList[[5]], mode = "mean") #summaryMat
+# 	
+# plot_clusters_prototypes(meanXYZ = clpr$meanXYZ)
+# 	
