@@ -18,13 +18,13 @@ pheno_data = fc_data$pdata
 source("sample_data/set_parameters.R")
 
 contour_res = suppressMessages(TinderMIX::create_contour(exp_data, pheno_data, 
-																							responsive_genes,
-																							dose_index = dose_index,
-																							time_point_index = time_point_index ,
-																							gridSize = gridSize,
-																							pvalFitting = pvalFitting,
-																							pvalFitting.adj.method = pvalFitting.adj.method,
-																							logScale = T, modelSelection = 1:3))
+		responsive_genes,
+		dose_index = dose_index,
+		time_point_index = time_point_index ,
+		gridSize = gridSize,
+		pvalFitting = pvalFitting,
+		pvalFitting.adj.method = pvalFitting.adj.method,
+		logScale = T, modelSelection = 1:3))
 
 print("Step 4: Run BMD_IC50 analysis on every gene")
 DDRGene = TinderMIX::run_all_BMD_IC50(contour_res = contour_res,
