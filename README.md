@@ -37,8 +37,8 @@ DDRGene = TinderMIX::run_all_BMD_IC50(contour_res = contour_res,
 	 relGenes = contour_res$ggenes, toPlot = FALSE)
 
 plot_dynamic_dose_responsive_map(contour_res, geneName="Gad1",activity_threshold,
-																						BMD_response_threshold,mode,nTimeInt,nDoseInt,
-																						timeLabels,doseLabels)
+		BMD_response_threshold,mode,nTimeInt,nDoseInt,
+		timeLabels,doseLabels)
 
 # plot heatmap with number of genes for each label
 # source("R/plotting_functions.R")
