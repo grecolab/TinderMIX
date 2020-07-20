@@ -4,13 +4,17 @@
 \alias{create_gene_table}
 \title{This function create a table with the information on the dynamic-dose-dependent genes}
 \usage{
-create_gene_table(DDRGene, contour_res,
+create_gene_table(DDRGene, contour_res, nTimeInt, nDoseInt,
   biomart_dataset = "rnorvegicus_gene_ensembl")
 }
 \arguments{
 \item{DDRGene}{is the results of the run_all_BMD_IC50 function}
 
 \item{contour_res}{is the result of the create_contour function}
+
+\item{nTimeInt}{number of time points}
+
+\item{nDoseInt}{number of dose levels}
 
 \item{biomart_dataset}{is a string specifying the dataset to use in the useEnsembl function. e.g rnorvegicus_gene_ensembl}
 }
