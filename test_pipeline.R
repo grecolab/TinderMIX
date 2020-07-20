@@ -35,11 +35,13 @@ plot_dynamic_dose_responsive_map(contour_res, geneName="Gad1",activity_threshold
 																						timeLabels,doseLabels)
 
 # plot heatmap with number of genes for each label
-gene_plot = TinderMIX::plot_number_genes_labels(DDRGene,drugName = drugName)
+# source("R/plotting_functions.R")
+gene_plot = TinderMIX::plot_number_genes_labels(res = DDRGene,drugName = drugName,timeLabels = timeLabels,doseLabels = doseLabels)
+plot(gene_plot)
 
 # plot radial plots with number of genes for the 12 combination of dose and time points
-label_plot = TinderMIX::plot_cake_diagrams_time_dose_effect(DDRGene)
+label_plot = TinderMIX::plot_cake_diagrams_time_dose_effect(res = DDRGene, timeLabels = timeLabels,doseLabels = doseLabels)
 
-res = TinderMIX::create_gene_table(DDRGene,contour_res, biomart_dataset = "rnorvegicus_gene_ensembl")
+res = TinderMIX::create_gene_table(DDRGene,contour_res, nTimeInt,nDoseInt,biomart_dataset = "rnorvegicus_gene_ensembl")
 	
 

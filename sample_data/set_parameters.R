@@ -17,9 +17,9 @@ logScale = TRUE
 activity_threshold = 0.1
 BMD_response_threshold = 0.5
 mode = "most_left"
-timeLabels = c("Late","Middle","Early")
+timeLabels =  c("Late","MiddleL","MiddleE","Early")
 doseLabels = c("Sensitive","Intermediate","Resilient")
-nTimeInt = 3
+nTimeInt = 4
 nDoseInt = 3
 
 #parameter clusterings
