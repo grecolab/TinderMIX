@@ -28,13 +28,13 @@ contour_res = suppressMessages(TinderMIX::create_contour(exp_data, pheno_data,
 
 print("Step 4: Run BMD_IC50 analysis on every gene")
 DDRGene = TinderMIX::run_all_BMD_IC50(contour_res = contour_res,
-											 activity_threshold = activity_threshold,  
-											 BMD_response_threshold = BMD_response_threshold, 
-											 mode=mode, 
-											 nDoseInt=nDoseInt, nTimeInt=nTimeInt, 
-											 doseLabels = doseLabels, timeLabels = timeLabels,
-											 tosave=FALSE, addLegend = FALSE, path = ".",
-											 relGenes = contour_res$ggenes, toPlot = FALSE)
+	 activity_threshold = activity_threshold,  
+	 BMD_response_threshold = BMD_response_threshold, 
+	 mode=mode, 
+	 nDoseInt=nDoseInt, nTimeInt=nTimeInt, 
+	 doseLabels = doseLabels, timeLabels = timeLabels,
+	 tosave=FALSE, addLegend = FALSE, path = ".",
+	 relGenes = contour_res$ggenes, toPlot = FALSE)
 
 plot_dynamic_dose_responsive_map(contour_res, geneName="Gad1",activity_threshold,
 																						BMD_response_threshold,mode,nTimeInt,nDoseInt,
