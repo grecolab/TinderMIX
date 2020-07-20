@@ -68,19 +68,34 @@ plot_number_genes_labels = function(res, drugName, timeLabels,doseLabels ){
 #' capital letters are used to indicate which between dose and time has a stronger effect
 #'
 #' @param res is the result object from the run_all_BMD_IC50 function
+#' @param timeLabels is the vector with time labels predefined by the user 
+#' @param doseLabels is the vector with dose labels predefined by the user
 #' @return a ggplot object
 #' @export
 #'
 
-plot_cake_diagrams_time_dose_effect=function(res){
-  M = res$MMA
+plot_cake_diagrams_time_dose_effect=function(res,timeLabels,doseLabels){
+
+	nTime = length(timeLabels)
+	nDose = length(doseLabels)
+	
+	allCombinations = c()
+	for(tt in timeLabels){
+		for(dd in doseLabels){
+			allCombinations = c(allCombinations, paste(dd,tt,sep="-"))
+		} 
+	}
+	
+	M = res$MMA
   listPlot = list()
   
   library(ggplot2)
   library(easyGgplot2)
   
   index = 1
-  for(i in c(1,4,7,2,5,8,3,6,9)){
+  for(i in allCombinations){
+  	
+  # for(i in c(1,4,7,2,5,8,3,6,9)){
     gi = rownames(M)[which(M[,i]!= 0)]
     
     if(length(gi)==0){
@@ -142,7 +157,7 @@ plot_cake_diagrams_time_dose_effect=function(res){
       
       p = ggplot(df, aes(x = variable, y = value, group =doseTimeEffect, fill=doseTimeEffect)) +  geom_bar(stat = "identity") #+ geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25)
       p = p + scale_y_continuous(1:12) + coord_polar(start=(-pi/2), direction = -1) + labs(x = "", y = "") 
-      p = p + theme(legend.position = "none") + theme_minimal()+ ggtitle(colnames(M)[i])
+      p = p + theme(legend.position = "none") + theme_minimal()+ ggtitle(i)
       p = p + geom_vline(xintercept = 3.5) + geom_vline(xintercept = 6.5) + geom_vline(xintercept = 9.5) + geom_vline(xintercept = 12.5)
       p = p + theme(axis.title.y=element_blank()) + theme(legend.position = "none")
       p
@@ -153,9 +168,7 @@ plot_cake_diagrams_time_dose_effect=function(res){
     index = index + 1
   }
   
-  ggplot2.multiplot(listPlot[[1]], listPlot[[2]], listPlot[[3]], listPlot[[4]],
-                    listPlot[[5]], listPlot[[6]], listPlot[[7]], listPlot[[8]],
-                    listPlot[[9]], cols=3)
+  ggplot2.multiplot(plotlist = listPlot,cols=nDose)
   return(listPlot)
 }
 
