@@ -5,19 +5,33 @@
 #'
 #' @param res is the result object from the run_all_BMD_IC50 function
 #' @param drugName is the name of the drug that will be used in the title 
+#' @param timeLabels is the vector with time labels predefined by the user 
+#' @param doseLabels is the vector with dose labels predefined by the user
 #' @return a ggplot object
 #' @export
 #'
 
-plot_number_genes_labels = function(res, drugName ){
+plot_number_genes_labels = function(res, drugName, timeLabels,doseLabels ){
   library(ggplot2)
   
+	timeLabels = rev(timeLabels)
+
+	nTime = length(timeLabels)
+	nDose = length(doseLabels)
+	
+	allCombinations = c()
+	for(tt in timeLabels){
+		for(dd in doseLabels){
+			allCombinations = c(allCombinations, paste(dd,tt,sep="-"))
+		} 
+	}
+	
   M = res$MMA
-  M = M[,c(3,6,9,2,5,8,1,4,7)]
+  M = M[,allCombinations]
   
-  matrice = matrix(colSums(abs(M)),3,3)
-  rownames(matrice) = c("Sensitive", "Intermediate","Resilient")
-  colnames(matrice) = c("Early","Middle","Late")
+  matrice = matrix(colSums(abs(M)),nDose,nTime)
+  rownames(matrice) = doseLabels# c("Sensitive", "Intermediate","Resilient")
+  colnames(matrice) = timeLabels #c("Early","Middle","Late")
   
   library(reshape2)
   melted_cormat <- melt(matrice)
