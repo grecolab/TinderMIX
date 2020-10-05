@@ -5,12 +5,16 @@
 \title{This function takes in input the result of the function run_all_BMD_IC50 and plot a 3x3 
 heatmap with the number of dose responsive genes for each label}
 \usage{
-plot_number_genes_labels(res, drugName)
+plot_number_genes_labels(res, drugName, timeLabels, doseLabels)
 }
 \arguments{
 \item{res}{is the result object from the run_all_BMD_IC50 function}
 
 \item{drugName}{is the name of the drug that will be used in the title}
+
+\item{timeLabels}{is the vector with time labels predefined by the user}
+
+\item{doseLabels}{is the vector with dose labels predefined by the user}
 }
 \value{
 a ggplot object

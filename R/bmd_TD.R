@@ -73,7 +73,7 @@ label2DMap = function(map, BMD, coord, myContour, th=0.95, mode = "mix", nDoseIn
   colnames(ttt) = doseLabels
   for(i in 1:nTimeInt){
     for(j in 1:nDoseInt){
-      ttt_area[i,j] = sum(BMD[idsTimes[[i]],idsDoses[[j]]])/(length(idsTimes[[i]]) * length(idsTimes[[j]]))
+      ttt_area[i,j] = sum(BMD[idsTimes[[i]],idsDoses[[j]]])/(length(idsTimes[[i]]) * length(idsDoses[[j]]))
     }
   }
   
@@ -284,7 +284,8 @@ run_all_BMD_IC50 = function(contour_res,activity_threshold = 0.1, BMD_response_t
     coord = cbind(contour_res$RPGenes[[geneName]][[1]],contour_res$RPGenes[[geneName]][[2]])
     tryCatch({
       res = compute_BMD_IC50(immy,coord, geneName,activity_threshold = activity_threshold,BMD_response_threshold=BMD_response_threshold,
-                             nDoseInt=nDoseInt,nTimeInt=nTimeInt,doseLabels=doseLabels,timeLabels=timeLabels,tosave = tosave,path = path, toPlot = toPlot, addLegend = addLegend,mode=mode)
+                             nDoseInt=nDoseInt,nTimeInt=nTimeInt,doseLabels=doseLabels,timeLabels=timeLabels,tosave = tosave,path = path, 
+                             toPlot = toPlot, addLegend = addLegend,mode=mode)
       GeneRes[[geneName]] = res
       if(is.null(res$verso)==FALSE){
         labels =  as.vector(res$label$ttt_label)
@@ -661,7 +662,17 @@ compute_BMD_IC50 = function(immy,coord, geneName,activity_threshold = 0.1, BMD_r
   }
   
   
-  restt0 = label2DMap(map = ternaryIMBMD,BMD = BMD, coord=coord,myContour = myContour,th = BMD_response_threshold,nDoseInt = nDoseInt,nTimeInt = nTimeInt,doseLabels = doseLabels,timeLabels = timeLabels,mode=mode,toplot = toPlot)
+  restt0 = label2DMap(map = ternaryIMBMD,
+                      BMD = BMD, 
+                      coord=coord,
+                      myContour = myContour,
+                      th = BMD_response_threshold,
+                      nDoseInt = nDoseInt,
+                      nTimeInt = nTimeInt,
+                      doseLabels = doseLabels,
+                      timeLabels = timeLabels,
+                      mode=mode,
+                      toplot = toPlot)
   
   
   ddd = cbind(coord[myContour[,2],1],coord[(gridSize + 1)-myContour[,1],2])

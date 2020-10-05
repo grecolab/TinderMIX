@@ -7,10 +7,14 @@ the letters d and t (independently if they are capital or small ) stand for dose
 +/- indicate if the gene fc is increasing or decreasing with respect of dose and time
 capital letters are used to indicate which between dose and time has a stronger effect}
 \usage{
-plot_cake_diagrams_time_dose_effect(res)
+plot_cake_diagrams_time_dose_effect(res, timeLabels, doseLabels)
 }
 \arguments{
 \item{res}{is the result object from the run_all_BMD_IC50 function}
+
+\item{timeLabels}{is the vector with time labels predefined by the user}
+
+\item{doseLabels}{is the vector with dose labels predefined by the user}
 }
 \value{
 a ggplot object
