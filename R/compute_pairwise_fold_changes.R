@@ -1,7 +1,7 @@
 #'
 #' This function starts from a phenodata and gene expression data matrix and compute all the possible pairwise foldchange values
 #'
-#' @param exp_data is the expression matrix with genes on the rows and samples on the columns
+#' @param exp_data is the log2 expression matrix with genes on the rows and samples on the columns
 #' @param pheno_data is a dataframe with phenodata informations. Samples are on the rows. The columns should include the dose and time point information. Doses of controls need to be indicated as 0
 #' @param dose_index index of the column containiing the dose
 #' @param time_index index of the column containing the time

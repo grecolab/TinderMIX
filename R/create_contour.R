@@ -154,7 +154,7 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
       y <- seq(y[1], y[2], length.out=gridSize)
       
       z <- outer(x,y, function(Dose,Time) stats::predict(optModel, data.frame(Dose,Time)))
-      List3d=list(x1,y1,z)
+      List3d=list(x,y,z)
       #plot3d(toPlot = List3d,logScale = TRUE, DF = Exp)
       
     }else{
@@ -166,6 +166,8 @@ create_contour = function(exp_data, pheno_data, responsive_genes,dose_index, tim
       x <- seq(x[1], x[2], length.out=gridSize)
       y <- range(as.numeric(as.vector(Exp$Time)))
       y <- seq(y[1], y[2], length.out=gridSize)
+      
+      #Z is a matrix dose X time Z[1,1] = first time and first dose
       z <- outer(x,y, function(Dose,Time) stats::predict(optModel, data.frame(Dose,Time)))
       List3d=list(x,y,z)
       #plot3d(toPlot = List3d,logScale = FALSE, DF = Exp)
